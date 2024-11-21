@@ -15,8 +15,8 @@ public class SendMail {
 
 		int number = 0;
 		String host = "smtp.naver.com";
-		final String user = "tak980418@naver.com";
-		final String password = "^^0322";
+		final String user = "";
+		final String password = "";
 
 		String to = email;
 
@@ -38,12 +38,12 @@ public class SendMail {
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
 
 			// Subject
-			message.setSubject("[NETWORK] ÀÎÁõ¹øÈ£ ¹ß¼ÛÀÔ´Ï´Ù");
+			message.setSubject("[NETWORK] ì¸ì¦ë²ˆí˜¸ ë°œì†¡ì…ë‹ˆë‹¤");
 
 			// Text
 			number = (int)(Math.random()*9999)+1000;
 			
-			message.setText("ÀÎÁõ¹øÈ£ : " +number +"\n ÀÎÁõ¹øÈ£¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä!!");
+			message.setText("ì¸ì¦ë²ˆí˜¸ : " +number +"\n ì¸ì¦ë²ˆí˜¸ë¥¼ ì…ë ¥í•´ì£¼ì„¸ìš”!!");
 
 			// send the message
 			Transport.send(message);
