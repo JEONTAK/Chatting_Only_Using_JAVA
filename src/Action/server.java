@@ -11,33 +11,33 @@ import java.util.ArrayList;
 import DO.Room;
 
 public class server {
-	private ServerSocket ss; // ¼­¹ö ¼ÒÄÏ
-	private ArrayList<MainHandler> allUserList; // ÀüÃ¼ »ç¿ëÀÚ
-	private ArrayList<MainHandler> connUserList; // Á¢¼Ó »ç¿ëÀÚ
-	private ArrayList<Room> roomtotalList;// ÀüÃ¼ ¹æ¸®½ºÆ®
+	private ServerSocket ss; // ì„œë²„ ì†Œì¼“
+	private ArrayList<MainHandler> allUserList; // ì „ì²´ ì‚¬ìš©ì
+	private ArrayList<MainHandler> connUserList; // ì ‘ì† ì‚¬ìš©ì
+	private ArrayList<Room> roomtotalList;// ì „ì²´ ë°©ë¦¬ìŠ¤íŠ¸
 
 	private Connection conn;
 	private String driver = "com.mysql.cj.jdbc.Driver";
     private String url = "jdbc:mysql://localhost/network?serverTimezone=UTC ";
     private String user = "root";
-    private String password = "wjsxkr0322";
+    private String password = "";
 
 	public server() {
 
 		try {
 			Class.forName(driver);
-			conn = DriverManager.getConnection(url, user, password); // DB ¿¬°á
+			conn = DriverManager.getConnection(url, user, password); // DB ì—°ê²°
 
 			ss = new ServerSocket(9500);
-			System.out.println("¼­¹öÁØºñ¿Ï·á");
+			System.out.println("ì„œë²„ì¤€ë¹„ì™„ë£Œ");
 
-			allUserList = new ArrayList<MainHandler>(); // ÀüÃ¼ »ç¿ëÀÚ
-			connUserList = new ArrayList<MainHandler>(); // Á¢¼Ó »ç¿ëÀÚ
-			roomtotalList = new ArrayList<Room>(); // ÀüÃ¼ ¹æ¸®½ºÆ®
+			allUserList = new ArrayList<MainHandler>(); // ì „ì²´ ì‚¬ìš©ì
+			connUserList = new ArrayList<MainHandler>(); // ì ‘ì† ì‚¬ìš©ì
+			roomtotalList = new ArrayList<Room>(); // ì „ì²´ ë°©ë¦¬ìŠ¤íŠ¸
 			while (true) {
 				Socket socket = ss.accept();
-				MainHandler handler = new MainHandler(socket,connUserList, roomtotalList, conn);// ½º·¹µå »ı¼º
-				handler.start();// ½º·¹µå ½ÃÀÛ
+				MainHandler handler = new MainHandler(socket,connUserList, roomtotalList, conn);// ìŠ¤ë ˆë“œ ìƒì„±
+				handler.start();// ìŠ¤ë ˆë“œ ì‹œì‘
 			} // while
 		} catch (IOException io) {
 			io.printStackTrace();
