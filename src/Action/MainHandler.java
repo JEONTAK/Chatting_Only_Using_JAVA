@@ -42,7 +42,7 @@ public class MainHandler extends Thread {
         printW = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 
         //RSA
-        String filepath = "./key2.txt"; // 파일 경로
+        String filepath = "./privatekey.txt"; // 파일 경로
         privateKeyReader = new BufferedReader(new InputStreamReader(new FileInputStream(filepath)));
         privateKey = privateKeyReader.readLine();
         //RSA

@@ -67,7 +67,7 @@ public class loginScreen extends JFrame implements ActionListener, Runnable, Lis
 
 
         //RSA부분
-        String filepath = "./key.txt";//파일 경로
+        String filepath = "./publickey.txt";//파일 경로
         br2 = new BufferedReader(new InputStreamReader(new FileInputStream(filepath)));
         publicKey = br2.readLine();
 
