@@ -1,80 +1,72 @@
 package Action;
 
 public class Protocol {
-	public static final String REGISTER = "100"; // È¸¿ø°¡ÀÔ(request)
+	public static final String REGISTER = "100"; // íšŒì›ê°€ì…(request)
 
-	public static final String IDSEARCH = "110"; // IDÃ£±â Join (request)
+	public static final String IDSEARCHCHECK = "111"; // (using íšŒì›ê°€ì…)ID ì¤‘ë³µí™•ì¸(request)
 
-	public static final String IDSEARCHCHECK = "111"; // (using È¸¿ø°¡ÀÔ)IDÃ£±â Áßº¹È®ÀÎ(request)
+	public static final String IDSEARCHCHECK_OK = "112"; // (using íšŒì›ê°€ì…)ID ì¤‘ë³µí™•ì¸ (ì‚¬ìš© ê°€ëŠ¥) (ACK)
 
-	public static final String IDSEARCHCHECK_OK = "112"; // (using È¸¿ø°¡ÀÔ)ID Áßº¹È®ÀÎ (»ç¿ë°¡´É) (ACK)
+	public static final String IDSEARCHCHECK_NO = "113"; // (using íšŒì›ê°€ì…)ID ì¤‘ë³µí™•ì¸ (ì‚¬ìš© ë¶ˆê°€ëŠ¥) (NACK)
 
-	public static final String IDSEARCHCHECK_NO = "113"; // (using È¸¿ø°¡ÀÔ)ID Áßº¹È®ÀÎ (»ç¿ë ºÒ°¡´É) (NACK)
+	public static final String ENTERLOGIN = "120"; // ë¡œê·¸ì¸(request)
 
-	public static final String ENTERLOGIN = "120"; // ·Î±×ÀÎ(request)
+	public static final String ENTERLOGIN_OK = "121"; // ë¡œê·¸ì¸ ì„±ê³µ(ACK)
 
-	public static final String ENTERLOGIN_OK = "121"; // ·Î±×ÀÎ ¼º°ø(ACK)
+	public static final String ENTERLOGIN_NO = "122"; // ë¡œê·¸ì¸ ì‹¤íŒ¨(NACK)
 
-	public static final String ENTERLOGIN_NO = "122"; // ·Î±×ÀÎ ½ÇÆĞ(NACK)
+	public static final String ROOMMAKE_OK = "201"; // ë°©ë§Œë“¤ê¸°_ACK
 
-	public static final String ROOMMAKE_OK = "201"; // ¹æ¸¸µé±â_ACK 
+	public static final String EXITMAINROOM = "203"; // ë¡œê·¸ì•„ì›ƒ
 
-	public static final String ROOMMAKE_OK1 = "202"; // ¹æ¸¸µé±â_ACK(¸¸µç»ç¶÷¿¡°Ô)
+	public static final String ENTERROOM_OK1 = "302"; // ë°©ì…ì¥ ì„±ê³µ (ë°©ë§Œë“  ì‚¬ìš©ì)
 
-	public static final String EXITMAINROOM = "203"; // ·Î±×¾Æ¿ô
+	public static final String ENTERROOM_USERLISTSEND = "304"; // ë°©ì— ìœ ì €ëª©ë¡ ë³´ë‚´ê¸°
 
-	public static final String ENTERROOM_OK = "301"; // ¹æÀÔÀå ¼º°ø
+	public static final String EXITCHATTINGROOM = "305"; // ë°© ë‚˜ê°€ê¸° (ì±„íŒ…ë°© ë‚˜ê°€ê¸°)
 
-	public static final String ENTERROOM_OK1 = "302"; // ¹æÀÔÀå ¼º°ø //ÀÔÀåÇÏ´Â ´ç»çÀÚ
+	public static final String CHATTINGSENDMESSAGE = "420"; // ì±„íŒ…ë°©ì—ì„œ ë©”ì‹œì§€ ë³´ë‚´ê¸° (Request)
 
-	public static final String ENTERROOM_NO = "303"; // ¹æÀÔÀå ½ÇÆĞ
+	public static final String CHATTINGSENDMESSAGE_OK = "430"; // ì„œë²„ê°€ ì±„íŒ…ë‚´ìš© í•´ë‹¹ ì±„íŒ…ë°©ì— ì „ë‹¬
+	
+	public static final String REQUEST_FRIEND_LIST = "560";	// ì¹œêµ¬ì¶”ê°€ ì°½ ë„ìš¸ì‹œ ì „ì²´ ìœ ì € ëª©ë¡ ìš”ì²­
+	
+	public static final String REQUEST_FRIEND_LIST_CONFIRM = "561"; // ì„œë²„ê°€ ìœ ì €ì—ê²Œ ìœ ì € ëª©ë¡ ì „ì†¡
+	
+	public static final String REQUEST_FRIEND_ADD = "562"; // ì¹œêµ¬ ì¶”ê°€í•  ìœ ì € ì •ë³´ ì „ì†¡
 
-	public static final String ENTERROOM_USERLISTSEND = "304"; // ¹æ¿¡ À¯Àú¸ñ·ÏÀ» º¸³»ÁÜ
-
-	public static final String EXITCHATTINGROOM = "305"; // ¹æ³ª°¡±â (Ã¤ÆÃ¹æ ³ª°¡±â)
-
-	public static final String CHATTINGSENDMESSAGE = "420"; // Ã¤ÆÃ¹æ¿¡¼­ ¸Ş¼¼Áö º¸³»±â (Request)
-
-	public static final String CHATTINGSENDMESSAGE_OK = "430"; // ¼­¹ö°¡ Ã¤ÆÃ³»¿ë ÇØ´ç Ã¤ÆÃ¹æ¿¡ Àü´Ş
+	public static final String CHANGE_TODAY_LINE = "570"; // ì˜¤ëŠ˜ì˜ í•œë§ˆë”” ë³€ê²½
 	
-	public static final String REQUEST_FRIEND_LIST = "560";	//Ä£±¸Ãß°¡ Ã¢ ¶ç¿ï½Ã ÀüÃ¼ À¯Àú ¸ñ·Ï ¿äÃ»
+	public static final String UPDATE_ME = "571"; // ì˜¤ëŠ˜ì˜ í•œë§ˆë”” ë³€ê²½ ë‹¹ì‚¬ì
 	
-	public static final String REQUEST_FRIEND_LIST_CONFIRM = "561"; //¼­¹ö°¡ À¯Àú¿¡°Ô À¯Àú ¸ñ·Ï Àü¼Û
+	public static final String UPDATED = "580"; // ì˜¤ëŠ˜ì˜ í•œë§ˆë”” ë³€ê²½, ì¹œêµ¬ ì¶”ê°€ ë“±ë“± ì—¬ëŸ¬ ì—…ë°ì´íŠ¸ ë°œìƒ ì‹œ ìµœì‹ í™” ìœ„í•¨. ì„œë²„ì—ì„œ ìœ ì €ì—ê²Œ ì—…ë°ì´íŠ¸ ë˜ì—ˆë‹¤ê³  ë³´ëƒ„
 	
-	public static final String REQUEST_FRIEND_ADD = "562"; //Ä£±¸Ãß°¡ÇÒ À¯Àú Á¤º¸ Àü¼Û
-
-	public static final String CHANGE_TODAY_LINE = "570"; //¿À´ÃÀÇ ÇÑ¸¶µğ º¯°æ
+	public static final String UPDATE_PLZ = "581"; //UPDATED ìš”ì²­ ë°›ìœ¼ë©´ ìœ ì €ëŠ” ì—…ë°ì´íŠ¸ ëœ í•­ëª© ìµœì‹ í™” ìš”ì²­
 	
-	public static final String UPDATE_ME = "571"; //¿À´ÃÀÇ ÇÑ¸¶µğ º¯°æ ´ç»çÀÚ
+	public static final String UPDATE_CONFIRM = "582";//ì„œë²„ê°€ UPDATE_PLZ ë°›ìœ¼ë©´ ì •ë³´ë¥¼ ìœ ì €ì—ê²Œ ë³´ëƒ„
 	
-	public static final String UPDATED = "580"; //¿À´ÃÀÇ ÇÑ¸¶µğº¯°æ, Ä£±¸Ãß°¡ µîµî ¿©·¯ ¾×¼Ç ¹ß»ı½Ã ÃÖ½ÅÈ­ À§ÇÔ ¼­¹ö¿¡¼­ À¯Àú¿¡°Ô ¾÷µ¥ÀÌÆ® µÇ¾ú´Ù°í º¸³¿
+	public static final String CHECK_FRIEND_INFO = "590"; //ì¹œêµ¬ì˜ ì •ë³´ í™•ì¸ ìš”ì²­
 	
-	public static final String UPDATE_PLZ = "581"; //UPDATED ¹ŞÀ¸¸é À¯Àú´Â ¾÷µ¥ÀÌÆ®µÈ Ç×¸ñ ÃÖ½ÅÈ­ µ¥ÀÌÅÍ ¿äÃ»
+	public static final String CONFIRM_FRIEND_INFO = "591"; //ì¹œêµ¬ì˜ ì •ë³´ ë°ì´í„° ìœ ì €ì—ê²Œ ì „ë‹¬
 	
-	public static final String UPDATE_CONFIRM = "582";//¼­¹ö°¡ UPDATE_PLZ ¹ŞÀ¸¸é Á¤º¸¸¦ À¯Àú¿¡°Ô º¸³¿
+	public static final String REQUEST_GROUPCHAT_LIST = "600"; //ê·¸ë£¹ ì±„íŒ…ë°© ì—´ê¸° ìœ„í•´ ì¹œêµ¬ ëª©ë¡ ìš”ì²­
 	
-	public static final String CHECK_FRIEND_INFO = "590"; //Ä£±¸ÀÇ Á¤º¸ È®ÀÎ ¿äÃ»
+	public static final String GROUPCHAT_LIST = "601"; //ì¹œêµ¬ ëª©ë¡ ì „ë‹¬
 	
-	public static final String CONFIRM_FRIEND_INFO = "591"; //Ä£±¸ÀÇ Á¤º¸ µ¥ÀÌÅÍ À¯Àú¿¡°Ô Àü´Ş
+	public static final String REQUEST_MAKE_GROUPCHAT = "602"; //í•´ë‹¹ ìœ ì € í¬í•¨í•œ ì±„íŒ…ë°© ë§Œë“¤ê¸° ìš”ì²­
 	
-	public static final String REQUEST_GROUPCHAT_LIST = "600"; //±×·ìÃ¤ÆÃÃ¢ ¿­±â À§ÇØ Ä£±¸ ¸ñ·Ï ¿äÃ»
+	public static final String JOINROOM_REQUEST = "610"; //ìœ ì €ê°€ ì±„íŒ… ì´ˆëŒ€í•˜ë©´ ì´ˆëŒ€ ë©”ì‹œì§€ ì „ì†¡
 	
-	public static final String GROUPCHAT_LIST = "601"; //Ä£±¸ ¸ñ·Ï Àü´Ş
+	public static final String JOINROOM_YES = "611"; //ì±„íŒ… ìš”ì²­ ìˆ˜ë½
 	
-	public static final String REQUEST_MAKE_GROUPCHAT = "602"; //ÇØ´ç À¯Àú Æ÷ÇÔÇÑ Ã¤ÆÃÃ¢ ¸¸µé±â ¿äÃ»
+	public static final String JOINROOM_NO = "612"; //ì±„íŒ… ìš”ì²­ ê±°ì ˆ
 	
-	public static final String JOINROOM_REQUEST = "610"; //À¯Àú°¡ Ã¤ÆÃ ÃÊ´ëÇÏ¸é ÃÊ´ë ¸Ş¼¼Áö Àü¼Û
+	public static final String ENTERROOM_REJECT = "620"; //ê±°ì ˆ í–ˆì„ì‹œ ì…ì¥í•´ìˆëŠ” ìœ ì €ì—ê²Œ ì•Œë¦¼ ë³´ëƒ„
 	
-	public static final String JOINROOM_YES = "611"; //Ã¤ÆÃ ¿äÃ» ¼ö¶ô
+	public static final String EXIT_CHATTINGROOM = "621"; //ì±„íŒ…ë°©ì„ ìœ ì €ê°€ ë‚˜ê°”ì„ ì‹œ
 	
-	public static final String JOINROOM_NO = "612"; //Ã¤ÆÃ ¿äÃ» °ÅÀı
+	public static final String REQUEST_FRIEND_DELETE="630"; //ì¹œêµ¬ ì‚­ì œ
 	
-	public static final String ENTERROOM_REJECT = "620"; //°ÅÀı ÇßÀ»½Ã ÀÔÀåÇØÀÖ´Â À¯Àúµé¿¡°Ô
-	
-	public static final String EXIT_CHATTINGROOM = "621"; //Ã¤ÆÃÃ¢À» À¯Àú°¡ ³ª°¬À»½Ã
-	
-	public static final String REQUEST_FRIEND_DELETE="630"; //Ä£±¸»èÁ¦
-	
-	public static final String CONFIRM_FRIEND_DELETE="631";//»èÁ¦È®ÀÎ
+	public static final String CONFIRM_FRIEND_DELETE="631";//ì‚­ì œ í™•ì¸
 	
 }

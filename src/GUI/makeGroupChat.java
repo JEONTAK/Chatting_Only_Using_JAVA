@@ -13,30 +13,30 @@ public class makeGroupChat extends JFrame{
 	JButton create = new JButton("CREATE");
 	JList<String> friendList;
 	DefaultListModel<String> list;
-	
+
 	public makeGroupChat() {
-		//±×·ìÃª »ı¼ºÀ» À§ÇÑ Ä£±¸¸ñ·Ï
+		//ê·¸ë£¹ì±— ìƒì„±ì„ ìœ„í•œ ì¹œêµ¬ëª©ë¡
 		friendList = new JList<String>(new DefaultListModel<String>());
-        list = (DefaultListModel)friendList.getModel();
-        friendList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        
-        //GUI ¼³Á¤
-        frame.setLayout(null);
+		list = (DefaultListModel)friendList.getModel();
+		friendList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
+		//GUI ì„¤ì •
+		frame.setLayout(null);
 		fL.setFont(new Font("STXinwei",Font.BOLD,30));
 		fL.setBounds(10, 10, 300, 30);
 		create.setBounds(280, 10, 100, 30);
 		JScrollPane p =new JScrollPane(friendList);
 		p.setBounds(10, 50, 370, 440);
-		//GUI ¼³Á¤ ³¡
-		//GUI Frame¿¡ Ãß°¡
+		//GUI ì„¤ì • ë
+		//GUI Frameì— ì¶”ê°€
 		frame.add(fL);
 		frame.add(create);
 		frame.add(p);
-		//GUI Frame¿¡ Ãß°¡ ³¡
+		//GUI Frameì— ì¶”ê°€ ë
 		frame.setSize(400,500);
 		Dimension res = Toolkit.getDefaultToolkit().getScreenSize();
 		frame.setLocation((res.width / 2) - 200 , (res.height / 2) - 250);
 		frame.setResizable(false);
-		
+
 	}
 }

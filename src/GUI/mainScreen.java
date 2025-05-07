@@ -1,55 +1,28 @@
 package GUI;
 
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.net.HttpURLConnection;
-import java.net.Socket;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.util.Calendar;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
+import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
+import java.awt.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Calendar;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
+public class mainScreen extends JFrame{
 
-import Action.Protocol;
-
-public class mainScreen extends JFrame{	
-	
 	JFrame frame = new JFrame("Messenger");
 	JPanel myinfo = new JPanel();
 	JPanel myname = new JPanel();
@@ -57,101 +30,101 @@ public class mainScreen extends JFrame{
 	JPanel friend = new JPanel();
 	JTextField stateMessage = new JTextField(20);
 	JTextField information = new JTextField(20);
-	JButton setting = new JButton("Menu");//¸Ş´º
-	JButton findFriend = new JButton("Add Friend");//Ä£±¸Ãß°¡
-	JButton groupChat = new JButton("Group Chat");//±×·ìÃ¤ÆÃ»ı¼º
+	JButton setting = new JButton("Menu");//ë©”ë‰´
+	JButton findFriend = new JButton("Add Friend");//ì¹œêµ¬ì¶”ê°€
+	JButton groupChat = new JButton("Group Chat");//ê·¸ë£¹ì±„íŒ…ìƒì„±
 	JList<String> fList;
 	DefaultListModel<String> list;
 	JPopupMenu menu = new JPopupMenu();
-    JPopupMenu user = new JPopupMenu();
-    JMenuItem exit = new JMenuItem("Exit");//³ª°¡±â
-    JMenuItem addF = new JMenuItem("Add Friend");//Ä£±¸Ãß°¡
-    JMenuItem groupC = new JMenuItem("Group Chat");//±×·ëÃ¤ÆÃ»ı¼º
-    JMenuItem chat = new JMenuItem("Chat");//Ã¤ÆÃ
-    JMenuItem info = new JMenuItem("Information");//Ä£±¸Á¤º¸
-    JMenuItem delete=new JMenuItem("Delete");//Ä£±¸»èÁ¦
-    JMenuItem changeTL = new JMenuItem("Change Today Line");//¿À´ÃÀÇÇÑ¸¶µğ
-    JLabel coronadeath = new JLabel();
-    JLabel coronadecide = new JLabel();
-    JLabel today = new JLabel();
+	JPopupMenu user = new JPopupMenu();
+	JMenuItem exit = new JMenuItem("Exit");//ë‚˜ê°€ê¸°
+	JMenuItem addF = new JMenuItem("Add Friend");//ì¹œêµ¬ì¶”ê°€
+	JMenuItem groupC = new JMenuItem("Group Chat");//ê·¸ë£¸ì±„íŒ…ìƒì„±
+	JMenuItem chat = new JMenuItem("Chat");//ì±„íŒ…
+	JMenuItem info = new JMenuItem("Information");//ì¹œêµ¬ì •ë³´
+	JMenuItem delete=new JMenuItem("Delete");//ì¹œêµ¬ì‚­ì œ
+	JMenuItem changeTL = new JMenuItem("Change Today Line");//ì˜¤ëŠ˜ì˜í•œë§ˆë””
+	JLabel coronadeath = new JLabel();
+	JLabel coronadecide = new JLabel();
+	JLabel today = new JLabel();
 	private BufferedReader br;
 	private PrintWriter pw;
 	public mainScreen(){
-		
-		 DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	        factory.setNamespaceAware(true);
-	        DocumentBuilder builder;
-	        Document doc = null;
-	        Calendar now=Calendar.getInstance(); //ÇöÀç ³¯Â¥¸¦ ¸®¾óÅ¸ÀÓÀ¸·Î ¹Ş¾Æ¿È
-	        int []death={0,0}; //ÀüÀÏ, ´çÀÏ ´©Àû »ç¸ÁÀÚ, È®ÁøÀÚ ÀúÀå arr
-	        int []decide={0,0};
-	        try {
-	            //OpenApiÈ£Ãâ
-	            String urlstr = "http://openapi.data.go.kr/openapi/service/rest/Covid19/getCovid19InfStateJson"//url
-	                    + "?serviceKey=2xbO73yAQSwDcoTLuXbVB4DPg6qQX8%2BMWLG4Oosuvhu7cYcMXzfx41spvhcH%2FsY1CIZM0pP7IfYp6LnoiTpd9g%3D%3D"//ÀÎÁõÅ°
-	                    +"&startCreateDt="+now.get(Calendar.YEAR)+(now.get(Calendar.MONTH)+1)+(now.get(Calendar.DATE)-1)//¾îÁ¦ ³¯Â¥
-	                  +"&endCreateDt="+now.get(Calendar.YEAR)+(now.get(Calendar.MONTH)+1)+now.get(Calendar.DATE);//ÇöÀç ³¯Â¥
-	            URL url = new URL(urlstr);
-	            HttpURLConnection urlconnection = (HttpURLConnection) url.openConnection(); //url·Î ¿¬°á
-	            br = new BufferedReader(new InputStreamReader(urlconnection.getInputStream(), "UTF-8"));//ÀÀ´ä ÀĞ±â
-	            String result = "";
-	            String line;
-	            while ((line = br.readLine()) != null) {
-	                result = result + line.trim();// result = URL·Î XMLÀ» ÀĞÀº °ª
-	            }
-	            br.close(); //¸ğµç XMLÀ» ¹Ş¾Æ¿Â ÈÄ ¹öÆÛ¸®´õ, url¿¬°á Â÷´Ü
-	            urlconnection.disconnect();
-	            // xml ÆÄ½ÌÇÏ±â
-	            InputSource is = new InputSource(new StringReader(result));
-	            builder = factory.newDocumentBuilder();
-	            doc = builder.parse(is);
-	            XPathFactory xpathFactory = XPathFactory.newInstance();
-	            XPath xpath = xpathFactory.newXPath();
-	            XPathExpression expr = xpath.compile("//items/item");
-	            NodeList nodeList = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);//¹Ş¾Æ¿Â ³¯Â¥ÀÇ °¹¼ö¸¸Å­ »ı¼º
-	            for (int i = 0; i < nodeList.getLength(); i++) { 
-	                NodeList child = nodeList.item(i).getChildNodes();//¹Ş¾Æ¿Â µ¥ÀÌÅÍ¼Â ¾ÈÀÇ ¿ä¼Ò¸¸Å­ »ı¼º
-	                for (int j = 0; j < child.getLength(); j++) {
-	                    Node node = child.item(j);
-	                    switch(node.getNodeName()) {
-	                    case "deathCnt":
-	                       death[i]=Integer.parseInt(node.getTextContent()); //´©Àû »ç¸ÁÀÚ¸¦ ³¯Â¥º°·Î ÀúÀå
-	                       break;
-	                    case "decideCnt":
-	                       decide[i]=Integer.parseInt(node.getTextContent()); //´©Àû È®ÁøÀÚ¸¦ ³¯Â¥º°·Î ÀúÀå
-	                       break;
-	                    case "stateDt":
-	                       break;
-	                    }
-	                }
-	            }
-	            death[0]-=death[1]; //´©Àû »ç¸ÁÀÚ, È®ÁøÀÚ °ªÀ» »©¼­ ´çÀÏ »ç¸ÁÀÚ, È®ÁøÀÚ¸¦ ±¸ÇÔ
-	            decide[0]-=decide[1];
-	        } catch (Exception e) {
-	            System.out.println(e.getMessage());
-	        }
-	    String date = Integer.toString(now.get(Calendar.YEAR))+ "³â "+
-            		Integer.toString((now.get(Calendar.MONTH)+1))+ "¿ù " +Integer.toString((now.get(Calendar.DATE))) + "ÀÏ";
-		today.setText(date + " ¿À´ÃÀÇ ÄÚ·Î³ª »óÈ²"); //ÄÚ·Î³ª °ü·Ã Á¤º¸ Ãâ·Â
-	    coronadeath.setText("»ç¸ÁÀÚ : " + death[0]);
-	    coronadecide.setText("È®ÁøÀÚ : " + decide[0]);
-	    today.setFont(new Font("STXinwei",Font.BOLD,15)); 
-	    coronadeath.setFont(new Font("STXinwei",Font.BOLD,15));
-	    coronadecide.setFont(new Font("STXinwei",Font.BOLD,15));
+
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(true);
+		DocumentBuilder builder;
+		Document doc = null;
+		Calendar now=Calendar.getInstance(); //í˜„ì¬ ë‚ ì§œë¥¼ ë¦¬ì–¼íƒ€ì„ìœ¼ë¡œ ë°›ì•„ì˜´
+		int []death={0,0}; //ì „ì¼, ë‹¹ì¼ ëˆ„ì  ì‚¬ë§ì, í™•ì§„ì ì €ì¥ arr
+		int []decide={0,0};
+		try {
+			//OpenApií˜¸ì¶œ
+			String urlstr = "http://openapi.data.go.kr/openapi/service/rest/Covid19/getCovid19InfStateJson"//url
+					+ "?serviceKey=2xbO73yAQSwDcoTLuXbVB4DPg6qQX8%2BMWLG4Oosuvhu7cYcMXzfx41spvhcH%2FsY1CIZM0pP7IfYp6LnoiTpd9g%3D%3D"//ì¸ì¦í‚¤
+					+"&startCreateDt="+now.get(Calendar.YEAR)+(now.get(Calendar.MONTH)+1)+(now.get(Calendar.DATE)-1)//ì–´ì œ ë‚ ì§œ
+					+"&endCreateDt="+now.get(Calendar.YEAR)+(now.get(Calendar.MONTH)+1)+now.get(Calendar.DATE);//í˜„ì¬ ë‚ ì§œ
+			URL url = new URL(urlstr);
+			HttpURLConnection urlconnection = (HttpURLConnection) url.openConnection(); //urlë¡œ ì—°ê²°
+			br = new BufferedReader(new InputStreamReader(urlconnection.getInputStream(), "UTF-8"));//ì‘ë‹µ ì½ê¸°
+			String result = "";
+			String line;
+			while ((line = br.readLine()) != null) {
+				result = result + line.trim();// result = URLë¡œ XMLì„ ì½ì€ ê°’
+			}
+			br.close(); //ëª¨ë“  XMLì„ ë°›ì•„ì˜¨ í›„ ë²„í¼ë¦¬ë”, urlì—°ê²° ì°¨ë‹¨
+			urlconnection.disconnect();
+			// xml íŒŒì‹±í•˜ê¸°
+			InputSource is = new InputSource(new StringReader(result));
+			builder = factory.newDocumentBuilder();
+			doc = builder.parse(is);
+			XPathFactory xpathFactory = XPathFactory.newInstance();
+			XPath xpath = xpathFactory.newXPath();
+			XPathExpression expr = xpath.compile("//items/item");
+			NodeList nodeList = (NodeList) expr.evaluate(doc, XPathConstants.NODESET);//ë°›ì•„ì˜¨ ë‚ ì§œì˜ ê°¯ìˆ˜ë§Œí¼ ìƒì„±
+			for (int i = 0; i < nodeList.getLength(); i++) {
+				NodeList child = nodeList.item(i).getChildNodes();//ë°›ì•„ì˜¨ ë°ì´í„°ì…‹ ì•ˆì˜ ìš”ì†Œë§Œí¼ ìƒì„±
+				for (int j = 0; j < child.getLength(); j++) {
+					Node node = child.item(j);
+					switch(node.getNodeName()) {
+						case "deathCnt":
+							death[i]=Integer.parseInt(node.getTextContent()); //ëˆ„ì  ì‚¬ë§ìë¥¼ ë‚ ì§œë³„ë¡œ ì €ì¥
+							break;
+						case "decideCnt":
+							decide[i]=Integer.parseInt(node.getTextContent()); //ëˆ„ì  í™•ì§„ìë¥¼ ë‚ ì§œë³„ë¡œ ì €ì¥
+							break;
+						case "stateDt":
+							break;
+					}
+				}
+			}
+			death[0]-=death[1]; //ëˆ„ì  ì‚¬ë§ì, í™•ì§„ì ê°’ì„ ë¹¼ì„œ ë‹¹ì¼ ì‚¬ë§ì, í™•ì§„ìë¥¼ êµ¬í•¨
+			decide[0]-=decide[1];
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		String date = Integer.toString(now.get(Calendar.YEAR))+ "ë…„ "+
+				Integer.toString((now.get(Calendar.MONTH)+1))+ "ì›” " +Integer.toString((now.get(Calendar.DATE))) + "ì¼";
+		today.setText(date + " ì˜¤ëŠ˜ì˜ ì½”ë¡œë‚˜ ìƒí™©"); //ì½”ë¡œë‚˜ ê´€ë ¨ ì •ë³´ ì¶œë ¥
+		coronadeath.setText("ì‚¬ë§ì : " + death[0]);
+		coronadecide.setText("í™•ì§„ì : " + decide[0]);
+		today.setFont(new Font("STXinwei",Font.BOLD,15));
+		coronadeath.setFont(new Font("STXinwei",Font.BOLD,15));
+		coronadecide.setFont(new Font("STXinwei",Font.BOLD,15));
 		fList = new JList<String>(new DefaultListModel<String>());
-        list = (DefaultListModel)fList.getModel();
-        frame.setLayout(null);
+		list = (DefaultListModel)fList.getModel();
+		frame.setLayout(null);
 		information.setEditable(false);
 		stateMessage.setEditable(false);
 		name.setFont(new Font("STXinwei",Font.BOLD,20));
 		name.setHorizontalAlignment(name.CENTER);
-		setting.setBounds(0, 0, 100, 50); //°¢ ¹öÆ° À§Ä¡ÁöÁ¤
+		setting.setBounds(0, 0, 100, 50); //ê° ë²„íŠ¼ ìœ„ì¹˜ì§€ì •
 		findFriend.setBounds(100, 0, 142, 50);
 		groupChat.setBounds(242,0,142,50);
 		name.setBounds(0, 50, 100, 100);
 		information.setBounds(100,75,300,25);
 		stateMessage.setBounds(100,100,300,25);
-		JScrollPane p =new JScrollPane(fList); //Ä£±¸¸ñ·ÏÃ¢
+		JScrollPane p =new JScrollPane(fList); //ì¹œêµ¬ëª©ë¡ì°½
 		p.setBounds(0, 150, 385, 600);
 		coronadeath.setBounds(10, 810, 170, 30);
 		coronadecide.setBounds(200, 810, 170, 30);
@@ -160,13 +133,13 @@ public class mainScreen extends JFrame{
 		menu.add(addF);
 		menu.add(groupC);
 		menu.add(changeTL);
-		setting.setComponentPopupMenu(menu); //ÆË¾÷Ã¢
-	    user.add(chat);
-	    user.add(info);
-	    user.add(delete);
-	    fList.setComponentPopupMenu(user);
-	    
-	    frame.add(setting);
+		setting.setComponentPopupMenu(menu); //íŒì—…ì°½
+		user.add(chat);
+		user.add(info);
+		user.add(delete);
+		fList.setComponentPopupMenu(user);
+
+		frame.add(setting);
 		frame.add(findFriend);
 		frame.add(groupChat);
 		frame.add(name);
@@ -177,14 +150,13 @@ public class mainScreen extends JFrame{
 		frame.add(coronadecide);
 		frame.add(today);
 		frame.setSize(400,900);
-	    Dimension res = Toolkit.getDefaultToolkit().getScreenSize();
+		Dimension res = Toolkit.getDefaultToolkit().getScreenSize();
 		frame.setLocation((res.width / 2) - 200 , (res.height / 2) - 425);
 		frame.setResizable(false);
-		frame.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); //ÇÁ·¹ÀÓ¿¡ ÀÖ´Â X ¹öÆ° ´­·¯µµ Ã¢ ¾È´İÈ÷°Ô ÇÔ.
-															 //¿À·ÎÁö EXIT Å¬¸¯½Ã ³ª°¥ ¼ö ÀÖÀ½.
-		
+		frame.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); //í”„ë ˆì„ì— ìˆëŠ” X ë²„íŠ¼ ëˆŒëŸ¬ë„ ì°½ ì•ˆë‹«íˆê²Œ í•¨.
+		//ì˜¤ë¡œì§€ EXIT í´ë¦­ì‹œ ë‚˜ê°ˆ ìˆ˜ ìˆìŒ.
+
 	}
 
 }
-
 

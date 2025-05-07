@@ -1,23 +1,23 @@
 package DO;
 
 public class User {
-	//À¯ÀúÀÇ °íÀ¯¹øÈ£
+	//ìœ ì €ì˜ ê³ ìœ  ë²ˆí˜¸
 	private int pryNumber;
-	//À¯ÀúÀÇ ID
+	//ìœ ì € ID
 	private String idName;
-	//À¯ÀúÀÇ ºñ¹Ğ¹øÈ£
+	//ìœ ì € ë¹„ë°€ë²ˆí˜¸
 	private String password;
-	//À¯ÀúÀÇ º°¸í
+	//ìœ ì € ë³„ëª…
 	private String nickName;
-	//À¯ÀúÀÇ ÀÌ¸§
+	//ìœ ì € ì´ë¦„
 	private String name;
-	//À¯ÀúÀÇ ÀÌ¸ŞÀÏ
+	//ìœ ì € ì´ë©”ì¼
 	private String email;
-	//À¯ÀúÀÇ ³ªÀÌ
+	//ìœ ì € ë‚˜ì´
 	private String age;
-	//À¯ÀúÀÇ ¿À´ÃÀÇ ÇÑ¸¶µğ
+	//ì˜¤ëŠ˜ì˜ í•œë§ˆë””
 	private String today_line;
-	//À¯ÀúÀÇ Á¢¼Ó »óÅÂ
+	//ì ‘ì† ìƒíƒœ
 	private int state;
 	
 	

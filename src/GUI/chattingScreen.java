@@ -1,38 +1,15 @@
 package GUI;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridLayout;
-import java.awt.Toolkit;
+import Action.Protocol;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-
-import Action.Protocol;
 
 public class chattingScreen extends JFrame implements Runnable, ActionListener {
 	
-	//GUI °´Ã¼ »ı¼º
+	//GUI ê°ì²´ ìƒì„±
 	public JFrame frame = new JFrame("");
 	public JButton exit;
 	public JLabel user = new JLabel("USER");
@@ -42,57 +19,53 @@ public class chattingScreen extends JFrame implements Runnable, ActionListener {
 	public chattingScreen(String roomN) {
 	///
 		
-		//frame ¼³Á¤
+		//frame ì„¤ì •
 		frame.setTitle(roomN);
 		frame.setLayout(null);
 		frame.setSize(400,600);
 		Dimension res = Toolkit.getDefaultToolkit().getScreenSize();
 		frame.setLocation((res.width / 2) - 200 , (res.height / 2) - 300);
-		frame.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); //frame¿¡¼­ X¸¦ ´­·¯µµ ³ª°¡Áö ¾Ê°ÔÇÔ.
-															 //¿À·ÎÁö EXIT¸¦ ´­·¯¾ß ³ª°¥ ¼ö ÀÖÀ½
+		frame.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); //frameì—ì„œ Xë¥¼ ëˆŒëŸ¬ë„ ë‚˜ê°€ì§€ ì•Šê²Œí•¨. ì˜¤ë¡œì§€ EXITë¥¼ ëˆŒëŸ¬ì•¼ ë‚˜ê°€ê²Œ ì„¤ì •
 		setResizable(false);
 		//
 		
-		//user label ¼³Á¤
+		//user label ì„¤ì •
 		user.setFont(new Font("STXinwei",Font.BOLD,20));
 		user.setBounds(280,20,100,30);
 		user.setHorizontalAlignment(user.CENTER);
 		//
 		
-		//scroll pane ¼³Á¤
+		//scroll pane ì„¤ì •
 		JScrollPane p =new JScrollPane(partList);
 		p.setBounds(280, 60, 100, 220);
 		//
 		
 		
-		//exit ¹öÆ° ¼³Á¤
+		//exit ë²„íŠ¼ ì„¤ì •
 		exit = new JButton("EXIT");
 		exit.setBounds(280,490,100,39);
 		//
 		
 		
-		//textField ¼³Á¤
+		//textField ì„¤ì •
 		textField.setBounds(20,490,250,40);
 		textField.setEditable(false);
 		textField.setText("");
 		//
 		
 		
-		//messageArea ¼³Á¤
+		//messageArea ì„¤ì •
 		messageArea.setEditable(false);
 		messageArea.setBounds(20,20,250,460);
 		messageArea.setText("");
 		//
 		
-		//partList TextArea ¼³Á¤
+		//partList TextArea ì„¤ì •
 		partList.setEditable(false);
 		partList.setText("");
 		//
 		
-		
-	
-		
-		//frame¿¡ componentÃß°¡
+		//frameì— componentì¶”ê°€
 		frame.add(user);
 		frame.add(messageArea);
 		frame.add(textField);
@@ -101,7 +74,7 @@ public class chattingScreen extends JFrame implements Runnable, ActionListener {
 		//
 		
 		frame.setVisible(true);
-		event();//event ½ÇÇà
+		event();//event ì‹¤í–‰
 	}
 	
 	public void event() {
@@ -110,13 +83,13 @@ public class chattingScreen extends JFrame implements Runnable, ActionListener {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {//ÀÌº¥Æ® ¼³Á¤
-		if(e.getSource() == textField) {//Ã¤ÆÃÃ¢¿¡ ÀÔ·Â ½Ã
-			loginScreen.printW.println(Protocol.CHATTINGSENDMESSAGE + "|" + textField.getText() + "|" + frame.getTitle()); // ¸Ş¼¼Áö¸¦ º¸³¿
+	public void actionPerformed(ActionEvent e) {//ì´ë²¤íŠ¸ ì„¤ì •
+		if(e.getSource() == textField) {//ì±„íŒ…ì°½ì— ì…ë ¥ ì‹œ
+			loginScreen.printW.println(Protocol.CHATTINGSENDMESSAGE + "|" + textField.getText() + "|" + frame.getTitle()); // ï¿½Ş¼ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			loginScreen.printW.flush();
 			textField.setText("");
 		}
-		else if (e.getSource() == exit) {//³ª°¡±â ¹öÆ° ´©¸¦ ½Ã 
+		else if (e.getSource() == exit) {//ë‚˜ê°€ê¸° ë²„íŠ¼ ëˆ„ë¥¼ ì‹œ
 			frame.setVisible(false);
 			loginScreen.printW.println(Protocol.EXITCHATTINGROOM + "|" + "Message" + "|" + frame.getTitle());
 			loginScreen.printW.flush();
@@ -130,7 +103,6 @@ public class chattingScreen extends JFrame implements Runnable, ActionListener {
 		String line[] = null;
 		while(true) {
 			try {
-				
 				
 			}catch (Exception io) {
 				io.printStackTrace();

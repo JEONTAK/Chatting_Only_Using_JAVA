@@ -1,26 +1,18 @@
 package GUI;
 
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Point;
-import java.awt.Toolkit;
+import Action.Protocol;
+import Action.RSA;
+import FunctionTest.Email.SendMail;
+
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -28,34 +20,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPasswordField;
-import javax.swing.JPopupMenu;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 
-import Action.Protocol;
-import Action.RSA;
-import FunctionTest.Email.SendMail;
+public class loginScreen extends JFrame implements ActionListener, Runnable, ListSelectionListener, PopupMenuListener {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-
-public class loginScreen extends JFrame implements ActionListener, Runnable, ListSelectionListener, PopupMenuListener{
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	
-	//È­¸é ±¸¼º
+    //í™”ë©´ êµ¬ì„±
     private JFrame frame = new JFrame("Login");
     private JLabel name = new JLabel("Messenger");
     private JLabel id = new JLabel("ID");
@@ -64,642 +36,643 @@ public class loginScreen extends JFrame implements ActionListener, Runnable, Lis
     private JPasswordField pwField = new JPasswordField(20);
     private JButton create = new JButton("CREATE");
     private JButton summit = new JButton("LOGIN");
-    //È­¸é ±¸¼º ³¡
-    
-    private String publicKey;//°ø¿ëÅ° Á¤ÀÇ
-    
-    //´Ù¸¥ GUI Á¤ÀÇ
-	newAccount createAccount;
-	mainScreen mainS;
-	addFriends aF;
-	makeGroupChat mGC;
-	//´Ù¸¥ GUI Á¤ÀÇ ³¡
-	Socket socket;
-	private BufferedReader br;
-	private BufferedReader br2;
-	static PrintWriter printW;
-	
-	private String sNumber = "><^^"; // default ½ÃÅ©¸´³Ñ¹ö
-	private boolean condition_S = false; // ÀÌ¸ŞÀÏ ÀÎÁõÈ®ÀÎ
-	private boolean condition_Id = false; // ID Áßº¹Ã¼Å©
-	private static Map<Integer, chattingScreen> chat_room=new HashMap<>(); //Ã¤ÆÃ¹æ °ü¸®
-	public loginScreen() throws IOException{
-		//¼ÒÄÏ »ı¼º
-		network();
-		
-		mainS = new mainScreen();
-		createAccount = new newAccount();
-		aF = new addFriends();
-		mGC = new makeGroupChat();
-		
-		
-		 ////RSAºÎºĞ
-		String filepath = "./key.txt";//ÆÄÀÏ °æ·Î
-		br2 = new BufferedReader(new InputStreamReader(new FileInputStream(filepath )));
-		publicKey=br2.readLine();
-         ///
-		
-		//·Î±×ÀÎÃ¢ GUI ¼³Á´ ¹× À§Ä¡ ,Å©±â, ±ÛÀÚ ÆùÆ® ¼³Á¤
-		frame.setLayout(null);
-		name.setFont(new Font("STXinwei",Font.BOLD,50));
-		id.setFont(new Font("STXinwei",Font.BOLD,20));
-		pw.setFont(new Font("STXinwei",Font.BOLD,20));
-		create.setFont(new Font("STXinwei",Font.BOLD,15));
-		summit.setFont(new Font("STXinwei",Font.BOLD,15));
-		name.setBounds(55,0,300,75);
-		id.setBounds(60,100,50,50);
-		pw.setBounds(60,160,50,50);
-		idField.setBounds(140,100,175,50);
-		pwField.setBounds(140,160,175,50);
-		create.setBounds(25,260,100,50);
-		summit.setBounds(275,260,100,50);
-		pwField.setEchoChar('*');
-		frame.add(name);
-		frame.add(id);
-		frame.add(pw);
-		frame.add(idField);
-		frame.add(pwField);
-		frame.add(create);
-		frame.add(summit);
-		frame.setSize(400,350);
-		Dimension res = Toolkit.getDefaultToolkit().getScreenSize();
-		frame.setLocation((res.width / 2) - 200 , (res.height / 2) - 175);
-		frame.setVisible(true);
-		frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		
-		//¾×¼Ç¸®½º³Ê ½ÇÇà
-		event();
-	}
+    //í™”ë©´ êµ¬ì„±
 
-	public void event() {
-		//È¸¿ø°¡ÀÔ ¹öÆ° ¸®½º³Ê
-		create.addActionListener(this);
-		//·Î±×ÀÎ È®ÀÎ ¹öÆ° ¸®½º³Ê
-		summit.addActionListener(this);
-		//ºñ¹Ğ¹øÈ£ ÀÔ·ÂÃ¢ ¿£ÅÍ ¸®½º³Ê
-		pwField.addActionListener(this);
-		//È¸¿ø°¡ÀÔ È®ÀÎ ¹öÆ° ¸®½º³Ê
-		createAccount.createOK.addActionListener(this);
-		//È¸¿ø°¡ÀÔ ¾ÆÀÌµğ Áßº¹ À¯¹« Ã¼Å© ¹öÆ° ¸®½º³Ê
-		createAccount.isDuplicate.addActionListener(this);
-		//È¸¿ø°¡ÀÔ ÀÌ¸ŞÀÏ ÀÎÁõ¹øÈ£ Àü¼Û ¹öÆ° ¸®½º³Ê
-		createAccount.checkEmail.addActionListener(this);
-		//È¸¿ø°¡ÀÔ ÀÌ¸ŞÀÏ ÀÎÁõ¹øÈ£ È®ÀÎ ¹öÆ° ¸®½º³Ê
-		createAccount.emailokB.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° ±×·ìÃ¤ÆÃ ¹öÆ° ¸®½º³Ê
-		mainS.groupChat.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° ¼³Á¤ ¹öÆ° ¸®½º³Ê
-		mainS.setting.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° Ä£±¸Ãß°¡ ¹öÆ° ¸®½º³Ê
-		mainS.findFriend.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° EXIT ÆË¾÷¸Ş´º ¸®½º³Ê
-		mainS.exit.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° Ä£±¸Ãß°¡ ÆË¾÷¸Ş´º ¸®½º³Ê
-		mainS.addF.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° ±×·ìÃ¤ÆÃ ÆË¾÷¸Ş´º ¸®½º³Ê
-		mainS.groupC.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° ¿À´ÃÀÇ ÇÑ¸¶µğ º¯°æ ÆË¾÷¸Ş´º ¸®½º³Ê
-		mainS.changeTL.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° Ä£±¸ Å¬¸¯½Ã ³ª¿À´Â Á¤º¸ ÆË¾÷¸Ş´º ¸®½º³Ê
-		mainS.info.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° Ä£±¸ Å¬¸¯½Ã ³ª¿À´Â 1´ë1 Ã¤ÆÃ ÆË¾÷¸Ş´º ¸®½º³Ê
-		mainS.chat.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° Ä£±¸ Å¬¸¯½Ã ³ª¿À´Â Ä£±¸ Á¦°Å ¸®½º³Ê
-		mainS.delete.addActionListener(this);
-		//Ä£±¸Ãß°¡Ã¢ À¯Àú°Ë»öÃ¢ ¸®½º³Ê
-		aF.input.addActionListener(this);
-		//Ä£±¸Ãß°¡Ã¢ Ä£±¸Ãß°¡ ÆË¾÷¸Ş´º ¸®½º³Ê
-		aF.addF.addActionListener(this);
-		//Ä£±¸Ãß°¡Ã¢ È®ÀÎ ¹öÆ° ¸®½º³Ê
-		aF.summit.addActionListener(this);
-		//±×·ìÃ¤ÆÃ¹æ »ı¼ºÃ¢ »ı¼º ¹öÆ° ¸®½º³Ê
-		mGC.create.addActionListener(this);
-		//¸ŞÀÎ½ºÅ©¸° Ä£±¸Å¬¸¯½Ã ³ªÅ¸³ª´Â ÆË¾÷¸Ş´º ¼³Á¤
-		initPopupListener(mainS.fList, mainS.user);
-		//¸ŞÀÎ½ºÅ©¸° ¼³Á¤ Å¬¸¯½Ã ³ªÅ¸³ª´Â ÆË¾÷¸Ş´º ¼³Á¤
-		initPopupListener(mainS.setting, mainS.menu);
-		//Ä£±¸Ãß°¡ Ã¢¿¡¼­ À¯ÀúÅ¬¸¯½Ã ³ªÅ¸³ª´Â ÆË¾÷¸Ş´º ¼³Á¤
-		initPopupListener(aF.wList, aF.add);
-	}
-	public void network() throws IOException {
-		
-		// ¼ÒÄÏ »ı¼º
-		try {
-			String serverInfo[] = readServerInfo();
-			socket = new Socket(serverInfo[0], Integer.parseInt(serverInfo[1]));
-			br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			printW = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+    private String publicKey;//ê³µê°œí‚¤ ì •ì˜
 
-		} catch (UnknownHostException e) {
-			System.out.println("¼­¹ö¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù");
-			e.printStackTrace();
-			System.exit(0);
-		} catch (IOException e) {
-			System.out.println("¼­¹ö¿Í ¿¬°áÀÌ ¾ÈµÇ¾ú½À´Ï´Ù");
-			e.printStackTrace();
-			System.exit(0);
-		}
+    //GUI ì •ì˜
+    newAccount createAccount;
+    mainScreen mainS;
+    addFriends aF;
+    makeGroupChat mGC;
 
-		// ÀÌº¥Æ®
+    Socket socket;
+    private BufferedReader br;
+    private BufferedReader br2;
+    static PrintWriter printW;
 
-		// ½º·¹µå »ı¼º
-		Thread t = new Thread(this);
-		t.start();
-	}
-	
-	//¼­¹öÀÇ IPÁÖ¼Ò, Port Number¸¦ ºÒ·¯¿È
-	public static String[] readServerInfo() throws IOException {
-  		//ÆÄÀÏÀÌ¸§Àº serverinfo.datÀ¸·Î ÁöÁ¤ÇÑ´Ù.
-  		String fileName = "serverinfo.dat";
-  		Scanner inputStream = null;
-  		String[] serverInfo = new String[2];
-  		String input;
-  		try {//¼­¹öÀÇ Á¤º¸¸¦ serverinfo.dat¿¡¼­ ¹Ş¾Æ¿Â´Ù.
-  			inputStream = new Scanner(new File(fileName));
-  			input = inputStream.nextLine();
-  			serverInfo = input.split(" ");	
-  		}//¸¸¾à ÆÄÀÏÀÌ Á¸ÀçÇÏÁö ¾Ê´Â´Ù¸é, ¼­¹öÁÖ¼Ò¸¦ 127.0.0.1, Æ÷Æ®¹øÈ£¸¦  9500 ±âº» °ªÀ¸·Î¼­ ¼³Á¤ÇØÁØ´Ù.
-  		catch(FileNotFoundException e) {
-  			serverInfo[0] = "127.0.0.1";
-  			serverInfo[1] = "9500";
-  		}
-  		return serverInfo;
-  	}
-	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		if(e.getSource() == create) { //È¸¿ø°¡ÀÔ ¹öÆ° ´©¸£¸é
-			createAccount.frame.setVisible(true);
-		}
-		else if(e.getSource() == summit) { //·Î±×ÀÎ ¹öÆ° ´©¸£¸é
-			String id = idField.getText();
-			String pwss = pwField.getText();
-			//ºñ¹Ğ¹øÈ£ RSAÀÌ¿ë ¾ÏÈ£È­
-			pwss=RSA.encode(pwss, publicKey);
-			if (id.length() == 0 || pwss.length() == 0) {
-				JOptionPane.showMessageDialog(this, "ºóÄ­À» ÀÔ·ÂÇØÁÖ¼¼¿ä");
-			} else {
-				String line = id + "%" + pwss;
-				//¼­¹ö¿¡°Ô ·Î±×ÀÎ ¿äÃ»
-				printW.println(Protocol.ENTERLOGIN + "|" + line);
-				printW.flush();
-			}
-			idField.setText("");
-			pwField.setText("");
-		}
-		else if(e.getSource() == pwField) { //ºñ¹Ğ¹øÈ£ Ä¡°í ¿£ÅÍ ´©¸£¸é
-			String id = idField.getText();
-			String pwss = pwField.getText();
-			//ºñ¹Ğ¹øÈ£ RSAÀÌ¿ë ¾ÏÈ£È­
-			pwss=RSA.encode(pwss, publicKey);
-			if (id.length() == 0 || pwss.length() == 0) {
-				JOptionPane.showMessageDialog(this, "ºóÄ­À» ÀÔ·ÂÇØÁÖ¼¼¿ä");
-			} else {
-				String line = id + "%" + pwss;
-				//¼­¹ö¿¡°Ô ·Î±×ÀÎ ¿äÃ»
-				printW.println(Protocol.ENTERLOGIN + "|" + line);
-				printW.flush();
-			}
-			idField.setText("");
-			pwField.setText("");
-		}
-		else if(e.getSource() == createAccount.createOK) { //È¸¿ø°¡ÀÔ ¿Ï·á ¹öÆ° Å¬¸¯
-			//À¯Àú°¡ ÀÔ·ÂÇÑ °ª°ú ÃÊ±â ±âº»°ªÀ¸·Î ¼³Á¤
-			String name = createAccount.nameField.getText();
-			String id = createAccount.idField.getText();
-			String pw1 = createAccount.pwField.getText();
-			//ºñ¹Ğ¹øÈ£ ¾ÏÈ£È­
-			pw1=RSA.encode(pw1, publicKey);
-			String ageYear = (String) createAccount.ageYearC.getSelectedItem();
-			String ageMonth = (String) createAccount.ageMonthC.getSelectedItem();
-			String ageDay = (String)createAccount.ageDayC.getSelectedItem();
-			String email = createAccount.emailField.getText();
-			String nickname = createAccount.nnField.getText();
-			String today_line = "Enter Today Message";
-			int state = 0;
-			//È¸¿ø°¡ÀÔ½Ã ÀÔ·Â ¾ÈÇÑ °÷ ÀÖ´Ù¸é
-			if(name.length() == 0 || id.length() == 0 || pw1.length() == 0 || email.length() == 0 || nickname.length() == 0) {
-				JOptionPane.showMessageDialog(this, "Please enter a blank space.");
-			}//È¸¿ø°¡ÀÔ½Ã Áßº¹Ã¼Å© ÇÏ°í ÀÌ¸ŞÀÏ ÀÎÁõ¹øÈ£µµ È®ÀÎ ÇßÀ¸¸é
-			else if(condition_S && condition_Id) {
-				String line = "";
-				line = (createAccount.idField.getText() + "%" + pw1 + 
-						"%" + createAccount.nnField.getText() + "%" + createAccount.nameField.getText() + 
-						"%" + createAccount.emailField.getText() + "@" + createAccount.emailC.getSelectedItem() + 
-						"%" + createAccount.ageYearC.getSelectedItem() + createAccount.ageMonthC.getSelectedItem()
-						+ createAccount.ageDayC.getSelectedItem() + "%" + today_line + "%" + state);
-				System.out.println(line);
-				//¼­¹ö¿¡°Ô µî·Ï¿äÃ» ÇÔ
-				printW.println(Protocol.REGISTER + "|" + line);
-				printW.flush();
-				
-				JOptionPane.showMessageDialog(this, "Create Account Success.");
-				createAccount.idField.setText("");
-				createAccount.pwField.setText("");
-				createAccount.nnField.setText("");
-				createAccount.nameField.setText("");
-				createAccount.emailField.setText("");
-				createAccount.emailC.setSelectedIndex(0);
-				createAccount.ageYearC.setSelectedIndex(0);
-				createAccount.ageMonthC.setSelectedIndex(0);
-				createAccount.ageDayC.setSelectedIndex(0);
-				condition_S = false;
-				condition_Id = false;
-				sNumber = "><^^";
-				createAccount.frame.setVisible(false);
-				this.frame.setVisible(true);
-			}//¸¸¾à IDÁßº¹Ã¼Å© ¾ÈÇß´Ù¸é
-			else if (!condition_Id && condition_S) {
-				JOptionPane.showMessageDialog(this, "Check ID Duplicated");
-			}//¸¸¾à ÀÌ¸ŞÀÏ Áßº¹Ã¼Å© ¾ÈÇß´Ù¸é
-			else if (!condition_S && condition_Id) {
-				JOptionPane.showMessageDialog(this, "Check Email");
-			}//µÑ´Ù ¾ÈÇß´Ù¸é
-			else if (!condition_Id && !condition_S) {
-				JOptionPane.showMessageDialog(this, "Check ID Duplicated , Check Email");
-			}
-			
-		}
-		else if(e.getSource() == createAccount.isDuplicate) {//ID Áßº¹ Ã¼Å©
-			if (createAccount.idField.getText().length() == 0) {
-				JOptionPane.showMessageDialog(this, "Input ID");
-			} else {
-				printW.println(Protocol.IDSEARCHCHECK + "|" + createAccount.idField.getText());
-				printW.flush();
-			}
-		}
-		else if (e.getSource() == createAccount.checkEmail) // È¸¿ø°¡ÀÔ ÆäÀÌÁö -----------> ÀÎÁõ¹øÈ£ Àü¼Û
-		{
-			if (createAccount.emailField.getText().length() == 0) {
-				JOptionPane.showMessageDialog(this, "Input Email");
-			} else {
-				JOptionPane.showMessageDialog(this, "Send the Check number");
-				String emailString = createAccount.emailField.getText() + "@"
-						+ (String) createAccount.emailC.getSelectedItem();
-				System.out.println(emailString);
-				sNumber = String.valueOf(SendMail.SendMail(emailString));
-			}
-		}else if (e.getSource() == createAccount.emailokB) { // È¸¿ø°¡ÀÔ ÆäÀÌÁö -----------> ÀÎÁõ¹øÈ£È®ÀÎ
-			if (sNumber.compareTo(createAccount.emailadductionT.getText()) == 0) {
-				JOptionPane.showMessageDialog(this, "Confirm");
-				condition_S = true;
-			} else {
-				JOptionPane.showMessageDialog(this, "Wrong Number");
-			}
-		}//¸ŞÀÎ½ºÅ©¸° ¼³Á¤ Å¬¸¯½Ã
-		else if(e.getSource() == mainS.setting) {
-			mainS.menu.show(mainS.setting, 0, 50);
-		}//¸ŞÀÎ½ºÅ©¸° Ä£±¸Ãß°¡ ¹öÆ° Å¬¸¯½Ã
-		else if(e.getSource() == mainS.findFriend) {
-			aF.input.setText("");
-			//¼­¹ö¿¡°Ô ÀüÃ¼À¯Àú¸ñ·Ï ¿äÃ»
-			printW.println(Protocol.REQUEST_FRIEND_LIST + "|" + "ALL!@#");
-			printW.flush();
-			aF.frame.setVisible(true);
-		}//¸ŞÀÎ½ºÅ©¸° ±×·ìÃ¤ÆÃ¹æ ¹öÆ° Å¬¸¯½Ã
-		else if(e.getSource() == mainS.groupChat) {//¹æ¸¸µé±â ÆäÀÌÁö ¿ÀÇÂ
-			mGC.frame.setVisible(true);
-			//±×·ìÃ¤ÆÃÃ¢ ¿­±â À§ÇØ Ä£±¸ ¸ñ·Ï ¿äÃ»
-			printW.println(Protocol.REQUEST_GROUPCHAT_LIST);
-			printW.flush();
-		}//¸ŞÀÎ½ºÅ©¸°¿¡¼­ ³ª°¡±â ÆË¾÷¸Ş´º Å¬¸¯½Ã
-		else if(e.getSource() == mainS.exit) {
-			mainS.frame.setVisible(false);
-  			this.frame.setVisible(true);
-  			//¼­¹ö¿¡°Ô À¯Àú ·Î±×¾Æ¿ô ¿äÃ»
-  			printW.println(Protocol.EXITMAINROOM + "|" + "message");
-  			printW.flush();
-		}//¸ŞÀÎ½ºÅ©¸°¿¡¼­ Ä£±¸Ãß°¡ ÆË¾÷¸Ş´º Å¬¸¯½Ã
-		else if(e.getSource() == mainS.addF) {
-			aF.input.setText("");
-			//±×·ìÃ¤ÆÃÃ¢ ¿­±â À§ÇØ Ä£±¸ ¸ñ·Ï ¿äÃ»
-			printW.println(Protocol.REQUEST_FRIEND_LIST + "|" + "ALL!@#");
-			printW.flush();
-			aF.frame.setVisible(true);
-		}//¸ŞÀÎ½ºÅ©¸° ±×·ìÃ¤ÆÃ¹æ ÆË¾÷¸Ş´º Å¬¸¯½Ã
-		else if(e.getSource() == mainS.groupC) {
-			mGC.frame.setVisible(true);
-			//±×·ìÃ¤ÆÃÃ¢ ¿­±â À§ÇØ Ä£±¸ ¸ñ·Ï ¿äÃ»
-			printW.println(Protocol.REQUEST_GROUPCHAT_LIST);
-			printW.flush();
-		}//¸ŞÀÎ½ºÅ©¸° ¿À´ÃÀÇ ÇÑ¸¶µğ º¯°æ ÆË¾÷¸Ş´º Å¬¸¯½Ã
-		else if(e.getSource() == mainS.changeTL) {
-			//º¯°æµÈ ¹®ÀÚ¿­ ¹Ş¾Æ¿È
-			String cTL = JOptionPane.showInputDialog("Enter Today Line");
-			//¼­¹ö¿¡°Ô ¿À´ÃÀÇ ÇÑ¸¶µğ º¯°æ ¿äÃ»
-			printW.println(Protocol.CHANGE_TODAY_LINE + "|" + cTL);
-			printW.flush();
-		}//¸ŞÀÎ½ºÅ©¸°¿¡¼­ Ä£±¸ Å¬¸¯½Ã ³ª¿À´Â chat ÆË¾÷¸Ş´º Å¬¸¯½Ã
-		else if(e.getSource() == mainS.chat) {
-			List line = mainS.fList.getSelectedValuesList();
-			//¼­¹ö¿¡°Ô Ã¤ÆÃ¹æ ¿­±â ¿äÃ»
-			printW.println(Protocol.REQUEST_MAKE_GROUPCHAT + "|" + line);
-			printW.flush();
-		}//¸ŞÀÎ½ºÅ©¸°¿¡¼­ Ä£±¸ Å¬¸¯½Ã ³ª¿À´Â Á¤º¸ ÆË¾÷¸Ş´º Å¬¸¯½Ã
-		else if(e.getSource() == mainS.info) {
-			//¼­¹ö¿¡°Ô Ä£±¸ Á¤º¸ ¿äÃ»
-			printW.println(Protocol.CHECK_FRIEND_INFO + "|" + mainS.fList.getSelectedValue());
-			printW.flush();
-		}//ÃÖ¿ì¼®:»èÁ¦±â´É Ãß°¡
-		else if(e.getSource()==mainS.delete) {
-			//¼­¹ö¿¡°Ô Ä£±¸ »èÁ¦ ¿äÃ» º¸³¿
-			printW.println(Protocol.REQUEST_FRIEND_DELETE+"|"+ mainS.fList.getSelectedValue());
-			printW.flush();
-		}//Ä£±¸ Ãß°¡ Ã¢¿¡¼­ È®ÀÎ ¹öÆ° Å¬¸¯½Ã
-		else if (e.getSource() == aF.summit) {
-			aF.frame.setVisible(false);
-		}//Ä£±¸ Ãß°¡Ã¢¿¡¼­ À¯Àú °Ë»ö½Ã
-		else if (e.getSource() == aF.input) {
-			//¸¸¾à °ø¹éÀÌ¸é ÀüÃ¼ À¯Àú ¿äÃ»
-			if(aF.input.getText().equalsIgnoreCase("")) {
-				printW.println(Protocol.REQUEST_FRIEND_LIST + "|" + "ALL!@#");
-				printW.flush();
-			}
-			//¾Æ´Ï¸é ¼­¹ö¿¡°Ô ÇØ´ç ¹®ÀÚ¿­Æ÷ÇÔÇÑ À¯Àú¸ñ·Ï ¿äÃ»
-			else {
-				printW.println(Protocol.REQUEST_FRIEND_LIST + "|" + aF.input.getText());
-				printW.flush();
-			}
-		}//Ä£±¸ Ãß°¡Ã¢¿¡¼­ À¯Àú Å¬¸¯½Ã ³ª¿À´Â Ä£±¸Ãß°¡ ÆË¾÷¸Ş´º Å¬¸¯½Ã
-		else if(e.getSource() == aF.addF) {
-			//¼­¹ö¿¡°Ô Ä£±¸Ãß°¡ ¿äÃ»
-			printW.println(Protocol.REQUEST_FRIEND_ADD + "|" + aF.wList.getSelectedValue());
-			printW.flush();
-		}//±×·ìÃ¤ÆÃ¹æ ¼³Á¤ Ã¢¿¡¼­ ¸¸µé±â ¹öÆ° Å¬¸¯½Ã
-		else if(e.getSource() == mGC.create) {
-			//¼±ÅÃÇÑ Ä£±¸ ¸ñ·Ï °ª ¹Ş¾Æ¼­ ¼­¹ö¿¡°Ô Ã¤ÆÃÃ¢ Open ¿äÃ»
-			List line = mGC.friendList.getSelectedValuesList();
-			printW.println(Protocol.REQUEST_MAKE_GROUPCHAT + "|" + line);
-			printW.flush();
-			mGC.frame.setVisible(false);
-		}
-	}
-	
-	private void initPopupListener(JButton setting, JPopupMenu menu) {
-		menu.addPopupMenuListener(new PopupMenuListener() {
-	          @Override
-	          public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-	        	  //ÆË¾÷¸Ş´º ³ª¿À´Â À§Ä¡ ¼³Á¤
-	        	  Object obj = e.getSource();
-	        	  String l = obj.toString();
-	        	  int x = l.indexOf("desiredLocationX");
-	        	  int y = l.indexOf("desiredLocationY");
-	        	  int label = l.indexOf("label");
-	        	  int rX = Integer.parseInt(l.substring(x + 17, y - 1));
-	        	  int rY = Integer.parseInt(l.substring(y + 17 ,label - 1));
-	        	  Point p = new Point(rX,rY);
-	              SwingUtilities.convertPointToScreen(p, setting);
-	              menu.setLocation(rX,rY);
-	          }
+    private String sNumber = "><^^"; // default ì‹œí¬ë¦¿ ë„˜ë²„
+    private boolean condition_S = false; // ì´ë©”ì¼ ì¸ì¦ í™•ì¸
+    private boolean condition_Id = false; // ID ì¤‘ë³µ ì²´í¬
+    private static Map<Integer, chattingScreen> chat_room = new HashMap<>(); //ì±„íŒ…ë°© ê´€ë¦¬
 
-	          @Override
-	          public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+    public loginScreen() throws IOException {
+        //ì†Œì¼“ ìƒì„±
+        network();
 
-	          }
+        mainS = new mainScreen();
+        createAccount = new newAccount();
+        aF = new addFriends();
+        mGC = new makeGroupChat();
 
-	          @Override
-	          public void popupMenuCanceled(PopupMenuEvent e) {
 
-	          }
-	      });
-	}
+        //RSAë¶€ë¶„
+        String filepath = "./key.txt";//íŒŒì¼ ê²½ë¡œ
+        br2 = new BufferedReader(new InputStreamReader(new FileInputStream(filepath)));
+        publicKey = br2.readLine();
 
-	private void initPopupListener(JList<String> list, JPopupMenu m) {
-		m.addPopupMenuListener(new PopupMenuListener() {
-	          @Override
-	          public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-	        	//ÆË¾÷¸Ş´º ³ª¿À´Â À§Ä¡ ¼³Á¤
-	        	  Object obj = e.getSource();
-	        	  String l = obj.toString();
-	        	  int x = l.indexOf("desiredLocationX");
-	        	  int y = l.indexOf("desiredLocationY");
-	        	  int label = l.indexOf("label");
-	        	  int rX = Integer.parseInt(l.substring(x + 17, y - 1));
-	        	  int rY = Integer.parseInt(l.substring(y + 17 ,label - 1));
-	        	  Point p = new Point(rX,rY);
-	              SwingUtilities.convertPointToScreen(p, list);
-	              m.setLocation(rX,rY);
-	          }
+        //ë¡œê·¸ì¸ì°½ GUI ì„¤ì • ë° ìœ„ì¹˜, í¬ê¸°, ê¸€ì í°íŠ¸ ì„¤ì •
+        frame.setLayout(null);
+        name.setFont(new Font("STXinwei", Font.BOLD, 50));
+        id.setFont(new Font("STXinwei", Font.BOLD, 20));
+        pw.setFont(new Font("STXinwei", Font.BOLD, 20));
+        create.setFont(new Font("STXinwei", Font.BOLD, 15));
+        summit.setFont(new Font("STXinwei", Font.BOLD, 15));
+        name.setBounds(55, 0, 300, 75);
+        id.setBounds(60, 100, 50, 50);
+        pw.setBounds(60, 160, 50, 50);
+        idField.setBounds(140, 100, 175, 50);
+        pwField.setBounds(140, 160, 175, 50);
+        create.setBounds(25, 260, 100, 50);
+        summit.setBounds(275, 260, 100, 50);
+        pwField.setEchoChar('*');
+        frame.add(name);
+        frame.add(id);
+        frame.add(pw);
+        frame.add(idField);
+        frame.add(pwField);
+        frame.add(create);
+        frame.add(summit);
+        frame.setSize(400, 350);
+        Dimension res = Toolkit.getDefaultToolkit().getScreenSize();
+        frame.setLocation((res.width / 2) - 200, (res.height / 2) - 175);
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-	          @Override
-	          public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+        //ì•¡ì…˜ ë¦¬ìŠ¤ë„ˆ ì‹¤í–‰
+        event();
+    }
 
-	          }
+    public void event() {
+        //íšŒì›ê°€ì… ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        create.addActionListener(this);
+        //ë¡œê·¸ì¸ í™•ì¸ ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        summit.addActionListener(this);
+        //ë¹„ë°€ë²ˆí˜¸ ì…ë ¥ì°½ ì—”í„° ë¦¬ìŠ¤ë„ˆ
+        pwField.addActionListener(this);
+        //íšŒì›ê°€ì… í™•ì¸ ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        createAccount.createOK.addActionListener(this);
+        //íšŒì›ê°€ì… ì•„ì´ë”” ì¤‘ë³µ ìœ ë¬´ ì²´í¬ ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        createAccount.isDuplicate.addActionListener(this);
+        //íšŒì›ê°€ì… ì´ë©”ì¼ ì¸ì¦ ë²ˆí˜¸ ì „ì†¡ ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        createAccount.checkEmail.addActionListener(this);
+        //íšŒì›ê°€ì… ì´ë©”ì¼ ì¸ì¦ ë²ˆí˜¸ í™•ì¸ ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        createAccount.emailokB.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ê·¸ë£¹ ì±„íŒ… ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        mainS.groupChat.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ì„¤ì • ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        mainS.setting.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ì¹œêµ¬ì¶”ê°€ ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        mainS.findFriend.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° EXIT íŒì—…ë©”ë‰´ ë¦¬ìŠ¤ë„ˆ
+        mainS.exit.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ì¹œêµ¬ì¶”ê°€ íŒì—…ë©”ë‰´ ë¦¬ìŠ¤ë„ˆ
+        mainS.addF.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ê·¸ë£¹ì±„íŒ… íŒì—…ë©”ë‰´ ë¦¬ìŠ¤ë„ˆ
+        mainS.groupC.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ì˜¤ëŠ˜ì˜ í•œë§ˆë”” ë³€ê²½ íŒì—…ë©”ë‰´ ë¦¬ìŠ¤ë„ˆ
+        mainS.changeTL.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ì¹œêµ¬ í´ë¦­ì‹œ ë‚˜ì˜¤ëŠ” ì •ë³´ íŒì—…ë©”ë‰´ ë¦¬ìŠ¤ë„ˆ
+        mainS.info.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ì¹œêµ¬ í´ë¦­ì‹œ ë‚˜ì˜¤ëŠ” 1ëŒ€1 ì±„íŒ… íŒì—…ë©”ë‰´ ë¦¬ìŠ¤ë„ˆ
+        mainS.chat.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ì¹œêµ¬ í´ë¦­ì‹œ ë‚˜ì˜¤ëŠ” ì¹œêµ¬ ì œê±° ë¦¬ìŠ¤ë„ˆ
+        mainS.delete.addActionListener(this);
+        //ì¹œêµ¬ì¶”ê°€ì°½ ìœ ì €ê²€ìƒ‰ì°½ ë¦¬ìŠ¤ë„ˆ
+        aF.input.addActionListener(this);
+        //ì¹œêµ¬ì¶”ê°€ì°½ ì¹œêµ¬ì¶”ê°€ íŒì—…ë©”ë‰´ ë¦¬ìŠ¤ë„ˆ
+        aF.addF.addActionListener(this);
+        //ì¹œêµ¬ì¶”ê°€ì°½ í™•ì¸ ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        aF.summit.addActionListener(this);
+        //ê·¸ë£¹ì±„íŒ…ë°© ìƒì„±ì°½ ìƒì„± ë²„íŠ¼ ë¦¬ìŠ¤ë„ˆ
+        mGC.create.addActionListener(this);
+        //ë©”ì¸ìŠ¤í¬ë¦° ì¹œêµ¬í´ë¦­ì‹œ ë‚˜íƒ€ë‚˜ëŠ” íŒì—…ë©”ë‰´ ì„¤ì •
+        initPopupListener(mainS.fList, mainS.user);
+        //ë©”ì¸ìŠ¤í¬ë¦° ì„¤ì • í´ë¦­ì‹œ ë‚˜íƒ€ë‚˜ëŠ” íŒì—…ë©”ë‰´ ì„¤ì •
+        initPopupListener(mainS.setting, mainS.menu);
+        //ì¹œêµ¬ì¶”ê°€ ì°½ì—ì„œ ìœ ì €í´ë¦­ì‹œ ë‚˜íƒ€ë‚˜ëŠ” íŒì—…ë©”ë‰´ ì„¤ì •
+        initPopupListener(aF.wList, aF.add);
+    }
 
-	          @Override
-	          public void popupMenuCanceled(PopupMenuEvent e) {
+    public void network() throws IOException {
 
-	          }
-	      });
-		
-	}
+        // ì†Œì¼“ ìƒì„±
+        try {
+            String serverInfo[] = readServerInfo();
+            socket = new Socket(serverInfo[0], Integer.parseInt(serverInfo[1]));
+            br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            printW = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-	@Override
-	public void run() {
-		// ¹Ş´ÂÂÊ
-		String line[] = null;
-		while (true) {
-			try {
-				line = br.readLine().split("\\|");
-				if (line == null) {
-					br.close();
-					printW.close();
-					socket.close();
+        } catch (UnknownHostException e) {
+            System.out.println("ì„œë²„ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤");
+            e.printStackTrace();
+            System.exit(0);
+        } catch (IOException e) {
+            System.out.println("ì„œë²„ì™€ ì—°ê²°ì´ ì•ˆë˜ì—ˆìŠµë‹ˆë‹¤");
+            e.printStackTrace();
+            System.exit(0);
+        }
 
-					System.exit(0);
-				} else if (line[0].compareTo(Protocol.IDSEARCHCHECK_OK) == 0) { // È¸¿ø°¡ÀÔ ID Áßº¹ ¾ÈµÊ
-					JOptionPane.showMessageDialog(this, "Available");
-					condition_Id = true;
-				} else if (line[0].compareTo(Protocol.IDSEARCHCHECK_NO) == 0) { // È¸¿ø°¡ÀÔ ID Áßº¹ µÊ
-					JOptionPane.showMessageDialog(this, "Unavailable");
-					condition_Id = false;
-				} else if (line[0].compareTo(Protocol.ENTERLOGIN_OK) == 0) // ·Î±×ÀÎ ¼º°ø
-				{
-					this.frame.setVisible(false);
-					mainS.frame.setVisible(true);
-					System.out.println(line);
-					mainS.name.setText(line[1]);
-					//ÀÚ½ÅÀÇ Á¤º¸¼³Á¤
-					mainS.information.setText(line[2] + " / " + line[4]);
-					mainS.stateMessage.setText(line[3]);
-					mainS.list.removeAllElements();
-					//Ä£±¸¸ñ·Ï ¼³Á¤
-					String text[] = line[5].split(":");
-					for (int i = 0; i < text.length; i++) {
-						String t[] = text[i].split("&");
-						if(t[0].equalsIgnoreCase("null") && t[1].equalsIgnoreCase("null") 
-								&& t[2].equalsIgnoreCase("null") && t[3].equalsIgnoreCase("null") && t[4].equalsIgnoreCase("null")) {
-						}
-						else {
-							mainS.list.addElement(t[0] +  "/" +  t[1] + "/" + t[2] + "/" + t[3] + "/" + t[4]);
-						}
-					}
-				} 
-				else if (line[0].compareTo(Protocol.ENTERLOGIN_NO) == 0) // ·Î±×ÀÎ ½ÇÆĞ
-				{
-					JOptionPane.showMessageDialog(this, line[1]);
-					System.out.println("Login Failed");
-				}//¿À´ÃÀÇ ÇÑ¸¶µğ º¯°æ µÇ¾úÀ»½Ã
-				else if(line[0].compareTo(Protocol.UPDATE_ME) == 0) {
-					mainS.stateMessage.setText(line[1]);
-				}//¼­¹ö¿¡¼­ ÃÖ½ÅÈ­ ÇÊ¿äÇÏ´Ù°í ¿äÃ»½Ã
-				else if(line[0].compareTo(Protocol.UPDATED) == 0) {
-					//¼­¹ö¿¡°Ô ÃÖ½ÅÈ­ ÇØ´Ş¶ó°í ¿äÃ»
-					printW.println(Protocol.UPDATE_PLZ);
-					printW.flush();//ÃÖ¿ì¼®: ÀÌ°Å ºüÁ®ÀÖ´Â°Å Ãß°¡ÇÔ
-				}//¼­¹ö°¡ À¯Àú¿¡°Ô ÃÖ½ÅÈ­ µ¥ÀÌÅÍ °¡Á®¿À¸é
-				else if(line[0].compareTo(Protocol.UPDATE_CONFIRM) == 0) {
-					//Ä£±¸ ¸ñ·Ï ´Ù½Ã ¼³Á¤
-					mainS.list.removeAllElements();
-					String text[] = line[1].split(":");
-					//¸¸¾à Ä£±¸ ¾øÀ¸¸é ¾È¶ç¿ò
-					for (int i = 0; i < text.length; i++) {
-						String t[] = text[i].split("&");
-						if(t[0].equalsIgnoreCase("null") && t[1].equalsIgnoreCase("null") && t[2].equalsIgnoreCase("null")
-								&& t[3].equalsIgnoreCase("null") && t[4].equalsIgnoreCase("null")) {
-						}
-						else {
-							mainS.list.addElement(t[0] +  "/" +  t[1] + "/" + t[2] + "/" + t[3] + "/" + t[4]);
-						}
-					}
-				}//¼­¹ö°¡ Ä£±¸Ãß°¡¿äÃ»Ã¢ÀÇ À¯Àú¸ñ·Ï ¿äÃ»¿¡ ´ëÇÑ Á¤º¸ ÁÙ½Ã
-				else if(line[0].compareTo(Protocol.REQUEST_FRIEND_LIST_CONFIRM) == 0) {
-					aF.list.removeAllElements();
-					String text[] = line[1].split(":");
-					//¸¸¾à À¯Àú¾øÀ¸¸é ¾È¶ç¿ò
-					for (int i = 0; i < text.length; i++) {
-						String t[] = text[i].split("&");
-						if(t[0].equalsIgnoreCase("null") && t[1].equalsIgnoreCase("null") 
-								&& t[2].equalsIgnoreCase("null") && t[3].equalsIgnoreCase("null")) {
-						}
-						else {
-							aF.list.addElement(t[0] +  "  " +  t[1] + "  " + t[2] + " " + t[3]);
-						}
-					}
-				}//Ä£±¸ÀÇ Á¤º¸È®ÀÎ ¿äÃ»¿¡ ´ëÇÑ Á¤º¸ ¹ŞÀ» ½Ã
-				else if(line[0].compareTo(Protocol.CONFIRM_FRIEND_INFO) == 0) {
-					String text[] = line[1].split("&");
-					String s = "offline";
-					if(text[6].equalsIgnoreCase("1")) {
-						s = "online";
-					}
-					JOptionPane.showMessageDialog(null, "ID : " + text[0] + "\nNICKNAME : " + text[1] + "\nNAME : " + text[2]
-							 + "\nEMAIL : " + text[3] + "\nAGE : " + text[4] + "\nTODAY_LINE : " + text[5] + "\nSTATE : " + s);
-				}//////ÃÖ¿ì¼®: Ä£±¸ »èÁ¦±â´É Ãß°¡
-				else if(line[0].compareTo(Protocol.CONFIRM_FRIEND_DELETE) == 0) {
-					String text[] = line[1].split("&");
+        // ì´ë²¤íŠ¸
 
-					JOptionPane.showMessageDialog(null, text[0]+" is deleted!");
-					printW.println(Protocol.UPDATE_PLZ);
-					printW.flush();
-					
-				}//±×·ìÃ¤ÆÃ¹æ ¿­¶§ Ä£±¸ ¸ñ·Ï Àü´Ş¿¡ ´ëÇÑ Á¤º¸ ¹ŞÀ» ½Ã
-				else if(line[0].compareTo(Protocol.GROUPCHAT_LIST) == 0) {
-					mGC.list.removeAllElements();
-					String text[] = line[1].split(":");
-					for (int i = 0; i < text.length; i++) {
-						String t[] = text[i].split("&");
-						if(t[0].equalsIgnoreCase("null") && t[1].equalsIgnoreCase("null") 
-								&& t[2].equalsIgnoreCase("null") && t[3].equalsIgnoreCase("null") && t[4].equalsIgnoreCase("null")) {
-						}
-						else {
-							mGC.list.addElement(t[0] +  "/" +  t[1] + "/" + t[2] + "/" + t[3] + "/" + t[4]);
-						}
-					}
-				}//Ã¤ÆÃ¹æ ÀÔÀå ¿äÃ» ¹ŞÀ»½Ã
-				else if(line[0].compareTo(Protocol.JOINROOM_REQUEST) == 0) {
-					int check = JOptionPane.showConfirmDialog(null, line[1] + " invited you. Do you Join Chat?", "REQUEST JOIN" ,JOptionPane.YES_NO_OPTION);
-					if(check == 0) {
-						//¼ö¶ôÇÏ¸é ¼ö¶ôÇß´Ù°í ¼­¹ö¿¡°Ô ¾Ë¸²
-						printW.println(Protocol.JOINROOM_YES + "|" + line[1] + "|" +line[2]);
-						printW.flush();
-					}
-					else {
-						//°ÅÀıÇß´Ù°í ¼­¹ö¿¡°Ô ¾Ë¸²
-						printW.println(Protocol.JOINROOM_NO + "|" +  line[1] + "|" +line[2]);
-						printW.flush();
-					}
-				}
-				else if (line[0].compareTo(Protocol.ROOMMAKE_OK) == 0) // ¹æ¸¸µé¾îÁü 
-				{
-					//Ã¤ÆÃ½ºÅ©¸°À» »õ·Ó°Ô ¸¸µé°í Ã¤ÆÃ¹æ Á¤º¸¿¡ ÀúÀå
-					System.out.println(Protocol.ROOMMAKE_OK);
-					chattingScreen chat = new chattingScreen(line[2]);
-					chat_room.put(Integer.parseInt(line[2]), chat);
-					
-				}
-				else if (line[0].compareTo(Protocol.ENTERROOM_OK1) == 0) // ¹æÀÔÀå ¿äÃ»¹ŞÀº À¯Àú°¡ ÀÔÀå½Ã
-				{
-					//Ã¤ÆÃ½ºÅ©¸°À» »õ·Ó°Ô ¸¸µé°í Ã¤ÆÃ¹æ Á¤º¸¿¡ ÀúÀå
-					chattingScreen chat = new chattingScreen(line[2]);
-					chat_room.put(Integer.parseInt(line[2]), chat);
-				} 
-				else if (line[0].compareTo(Protocol.ENTERROOM_USERLISTSEND) == 0) // Ã¤ÆÃ¹æ À¯Àú ¸®½ºÆ® »õ·Î°íÄ§
-				{
+        // ìŠ¤ë ˆë“œ ìƒì„±
+        Thread t = new Thread(this);
+        t.start();
+    }
 
-					String roomMember[] = line[1].split("%");// ·ë¿¡ µé¾î¿Â»ç¶÷µé
-					String lineList = "";
-					for (int i = 0; i < roomMember.length; i++) {
-						lineList += (roomMember[i] + "\n");
-					}
-					System.out.println(lineList);
-					//Ã¤ÆÃ¹æ ¸ñ·Ï¿¡¼­ ÇØ´ç¹æ ÃßÃâÇØ ¼³Á¤ÇØÁÜ
-					chattingScreen temp = chat_room.get(Integer.parseInt(line[3]));
-					temp.textField.setEditable(true);
-					temp.partList.setText(lineList);
-					temp.messageArea.append(line[2] + "\n");
-				}//»ó´ë¹æÀÌ Ã¤ÆÃÄ£ Á¤º¸°¡ ¼­¹ö¸¦ ÅëÇØ ³Ñ¾î¿Ã½Ã
-				else if (line[0].compareTo(Protocol.CHATTINGSENDMESSAGE_OK) == 0) {
-					//Ã¤ÆÃ¹æ ¸ñ·Ï¿¡¼­ ÇØ´ç¹æ ÃßÃâÇØ ¼³Á¤ÇØÁÜ
-					chattingScreen temp = chat_room.get(Integer.parseInt(line[3]));
-					temp.messageArea.append("[" + line[1] + "] :" + line[2] + "\n");
-				}//»ó´ë¹æÀÌ ¹æÀÔÀå ¿äÃ» °ÅÀı½Ã
-				else if(line[0].compareTo(Protocol.ENTERROOM_REJECT) == 0) {
-					//Ã¤ÆÃ¹æ ¸ñ·Ï¿¡¼­ ÇØ´ç¹æ ÃßÃâÇØ ¼³Á¤ÇØÁÜ
-					chattingScreen temp = chat_room.get(Integer.parseInt(line[2]));
-					temp.frame.setVisible(false);
-					temp.partList.setText("");
-					JOptionPane.showMessageDialog(null, line[1] + " reject join chat.");
-				}//À¯Àú°¡ Ã¤ÆÃ¹æÀ» ³ª°¡¸é
-				else if(line[0].compareTo(Protocol.EXIT_CHATTINGROOM) == 0) {
-					//Ã¤ÆÃ¹æ ¸ñ·Ï¿¡¼­ ÇØ´ç¹æ ÃßÃâÇØ ¼³Á¤ÇØÁÜ
-					chattingScreen temp = chat_room.get(Integer.parseInt(line[1]));
-					temp.frame.setVisible(false);
-					temp.partList.setText("");
-					temp.textField.setEditable(false);
-					JOptionPane.showMessageDialog(null, "All user exit.");
-				}
+    //ì„œë²„ì˜ IPì£¼ì†Œ, Port Numberë¥¼ ë¶ˆëŸ¬ì˜´
+    public static String[] readServerInfo() throws IOException {
+        //íŒŒì¼ì´ë¦„ì€ serverinfo.datìœ¼ë¡œ ì§€ì •í•œë‹¤.
+        String fileName = "serverinfo.dat";
+        Scanner inputStream = null;
+        String[] serverInfo = new String[2];
+        String input;
+        try {//ì„œë²„ì˜ ì •ë³´ë¥¼ serverinfo.datì—ì„œ ë°›ì•„ì˜¨ë‹¤.
+            inputStream = new Scanner(new File(fileName));
+            input = inputStream.nextLine();
+            serverInfo = input.split(" ");
+        }//ë§Œì•½ íŒŒì¼ì´ ì¡´ì¬í•˜ì§€ ì•ŠëŠ”ë‹¤ë©´, ì„œë²„ì£¼ì†Œë¥¼ 127.0.0.1, í¬íŠ¸ë²ˆí˜¸ë¥¼  9500 ê¸°ë³¸ ê°’ìœ¼ë¡œì„œ ì„¤ì •í•´ì¤€ë‹¤.
+        catch(FileNotFoundException e) {
+            serverInfo[0] = "127.0.0.1";
+            serverInfo[1] = "9500";
+        }
+        return serverInfo;
+    }
 
-			} catch (IOException io) {
-				io.printStackTrace();
-			}
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if(e.getSource() == create) { //íšŒì›ê°€ì… ë²„íŠ¼ ëˆ„ë¥´ë©´
+            createAccount.frame.setVisible(true);
+        }
+        else if(e.getSource() == summit) { //ë¡œê·¸ì¸ ë²„íŠ¼ ëˆ„ë¥´ë©´
+            String id = idField.getText();
+            String pwss = pwField.getText();
+            //ë¹„ë°€ë²ˆí˜¸ RSAì´ìš© ì•”í˜¸í™”
+            pwss=RSA.encode(pwss, publicKey);
+            if (id.length() == 0 || pwss.length() == 0) {
+                JOptionPane.showMessageDialog(this, "ë¹ˆì¹¸ì„ ì…ë ¥í•´ì£¼ì„¸ìš”");
+            } else {
+                String line = id + "%" + pwss;
+                //ì„œë²„ì—ê²Œ ë¡œê·¸ì¸ ìš”ì²­
+                printW.println(Protocol.ENTERLOGIN + "|" + line);
+                printW.flush();
+            }
+            idField.setText("");
+            pwField.setText("");
+        }
+        else if(e.getSource() == pwField) { //ë¹„ë°€ë²ˆí˜¸ ì¹˜ê³  ì—”í„° ëˆ„ë¥´ë©´
+            String id = idField.getText();
+            String pwss = pwField.getText();
+            //ë¹„ë°€ë²ˆí˜¸ RSAì´ìš© ì•”í˜¸í™”
+            pwss=RSA.encode(pwss, publicKey);
+            if (id.length() == 0 || pwss.length() == 0) {
+                JOptionPane.showMessageDialog(this, "ë¹ˆì¹¸ì„ ì…ë ¥í•´ì£¼ì„¸ìš”");
+            } else {
+                String line = id + "%" + pwss;
+                //ì„œë²„ì—ê²Œ ë¡œê·¸ì¸ ìš”ì²­
+                printW.println(Protocol.ENTERLOGIN + "|" + line);
+                printW.flush();
+            }
+            idField.setText("");
+            pwField.setText("");
+        }
+        else if(e.getSource() == createAccount.createOK) { //íšŒì›ê°€ì… ì™„ë£Œ ë²„íŠ¼ í´ë¦­
+            //ìœ ì €ê°€ ì…ë ¥í•œ ê°’ê³¼ ì´ˆê¸° ê¸°ë³¸ê°’ìœ¼ë¡œ ì„¤ì •
+            String name = createAccount.nameField.getText();
+            String id = createAccount.idField.getText();
+            String pw1 = createAccount.pwField.getText();
+            //ë¹„ë°€ë²ˆí˜¸ ì•”í˜¸í™”
+            pw1=RSA.encode(pw1, publicKey);
+            String ageYear = (String) createAccount.ageYearC.getSelectedItem();
+            String ageMonth = (String) createAccount.ageMonthC.getSelectedItem();
+            String ageDay = (String)createAccount.ageDayC.getSelectedItem();
+            String email = createAccount.emailField.getText();
+            String nickname = createAccount.nnField.getText();
+            String today_line = "Enter Today Message";
+            int state = 0;
+            //íšŒì›ê°€ì…ì‹œ ì…ë ¥ ì•ˆí•œ ê³³ ìˆë‹¤ë©´
+            if(name.length() == 0 || id.length() == 0 || pw1.length() == 0 || email.length() == 0 || nickname.length() == 0) {
+                JOptionPane.showMessageDialog(this, "Please enter a blank space.");
+            }//íšŒì›ê°€ì…ì‹œ ì¤‘ë³µì²´í¬ í•˜ê³  ì´ë©”ì¼ ì¸ì¦ë²ˆí˜¸ë„ í™•ì¸ í–ˆìœ¼ë©´
+            else if(condition_S && condition_Id) {
+                String line = "";
+                line = (createAccount.idField.getText() + "%" + pw1 +
+                        "%" + createAccount.nnField.getText() + "%" + createAccount.nameField.getText() +
+                        "%" + createAccount.emailField.getText() + "@" + createAccount.emailC.getSelectedItem() +
+                        "%" + createAccount.ageYearC.getSelectedItem() + createAccount.ageMonthC.getSelectedItem()
+                        + createAccount.ageDayC.getSelectedItem() + "%" + today_line + "%" + state);
+                System.out.println(line);
+                //ì„œë²„ì—ê²Œ ë“±ë¡ìš”ì²­ í•¨
+                printW.println(Protocol.REGISTER + "|" + line);
+                printW.flush();
 
-		} // while
+                JOptionPane.showMessageDialog(this, "Create Account Success.");
+                createAccount.idField.setText("");
+                createAccount.pwField.setText("");
+                createAccount.nnField.setText("");
+                createAccount.nameField.setText("");
+                createAccount.emailField.setText("");
+                createAccount.emailC.setSelectedIndex(0);
+                createAccount.ageYearC.setSelectedIndex(0);
+                createAccount.ageMonthC.setSelectedIndex(0);
+                createAccount.ageDayC.setSelectedIndex(0);
+                condition_S = false;
+                condition_Id = false;
+                sNumber = "><^^";
+                createAccount.frame.setVisible(false);
+                this.frame.setVisible(true);
+            }//ë§Œì•½ IDì¤‘ë³µì²´í¬ ì•ˆí–ˆë‹¤ë©´
+            else if (!condition_Id && condition_S) {
+                JOptionPane.showMessageDialog(this, "Check ID Duplicated");
+            }//ë§Œì•½ ì´ë©”ì¼ ì¤‘ë³µì²´í¬ ì•ˆí–ˆë‹¤ë©´
+            else if (!condition_S && condition_Id) {
+                JOptionPane.showMessageDialog(this, "Check Email");
+            }//ë‘˜ë‹¤ ì•ˆí–ˆë‹¤ë©´
+            else if (!condition_Id && !condition_S) {
+                JOptionPane.showMessageDialog(this, "Check ID Duplicated , Check Email");
+            }
 
-		
-	}
+        }
+        else if(e.getSource() == createAccount.isDuplicate) {//ID ì¤‘ë³µ ì²´í¬
+            if (createAccount.idField.getText().length() == 0) {
+                JOptionPane.showMessageDialog(this, "Input ID");
+            } else {
+                printW.println(Protocol.IDSEARCHCHECK + "|" + createAccount.idField.getText());
+                printW.flush();
+            }
+        }
+        else if (e.getSource() == createAccount.checkEmail) // íšŒì›ê°€ì… í˜ì´ì§€ -----------> ì¸ì¦ë²ˆí˜¸ ì „ì†¡
+        {
+            if (createAccount.emailField.getText().length() == 0) {
+                JOptionPane.showMessageDialog(this, "Input Email");
+            } else {
+                JOptionPane.showMessageDialog(this, "Send the Check number");
+                String emailString = createAccount.emailField.getText() + "@"
+                        + (String) createAccount.emailC.getSelectedItem();
+                System.out.println(emailString);
+                sNumber = String.valueOf(SendMail.SendMail(emailString));
+            }
+        }else if (e.getSource() == createAccount.emailokB) { // íšŒì›ê°€ì… í˜ì´ì§€ -----------> ì¸ì¦ë²ˆí˜¸í™•ì¸
+            if (sNumber.compareTo(createAccount.emailadductionT.getText()) == 0) {
+                JOptionPane.showMessageDialog(this, "Confirm");
+                condition_S = true;
+            } else {
+                JOptionPane.showMessageDialog(this, "Wrong Number");
+            }
+        }//ë©”ì¸ìŠ¤í¬ë¦° ì„¤ì • í´ë¦­ì‹œ
+        else if(e.getSource() == mainS.setting) {
+            mainS.menu.show(mainS.setting, 0, 50);
+        }//ë©”ì¸ìŠ¤í¬ë¦° ì¹œêµ¬ì¶”ê°€ ë²„íŠ¼ í´ë¦­ì‹œ
+        else if(e.getSource() == mainS.findFriend) {
+            aF.input.setText("");
+            //ì„œë²„ì—ê²Œ ì „ì²´ìœ ì €ëª©ë¡ ìš”ì²­
+            printW.println(Protocol.REQUEST_FRIEND_LIST + "|" + "ALL!@#");
+            printW.flush();
+            aF.frame.setVisible(true);
+        }//ë©”ì¸ìŠ¤í¬ë¦° ê·¸ë£¹ì±„íŒ…ë°© ë²„íŠ¼ í´ë¦­ì‹œ
+        else if(e.getSource() == mainS.groupChat) {//ë°©ë§Œë“¤ê¸° í˜ì´ì§€ ì˜¤í”ˆ
+            mGC.frame.setVisible(true);
+            //ê·¸ë£¹ì±„íŒ…ì°½ ì—´ê¸° ìœ„í•´ ì¹œêµ¬ ëª©ë¡ ìš”ì²­
+            printW.println(Protocol.REQUEST_GROUPCHAT_LIST);
+            printW.flush();
+        }//ë©”ì¸ìŠ¤í¬ë¦°ì—ì„œ ë‚˜ê°€ê¸° íŒì—…ë©”ë‰´ í´ë¦­ì‹œ
+        else if(e.getSource() == mainS.exit) {
+            mainS.frame.setVisible(false);
+            this.frame.setVisible(true);
+            //ì„œë²„ì—ê²Œ ìœ ì € ë¡œê·¸ì•„ì›ƒ ìš”ì²­
+            printW.println(Protocol.EXITMAINROOM + "|" + "message");
+            printW.flush();
+        }//ë©”ì¸ìŠ¤í¬ë¦°ì—ì„œ ì¹œêµ¬ì¶”ê°€ íŒì—…ë©”ë‰´ í´ë¦­ì‹œ
+        else if(e.getSource() == mainS.addF) {
+            aF.input.setText("");
+            //ê·¸ë£¹ì±„íŒ…ì°½ ì—´ê¸° ìœ„í•´ ì¹œêµ¬ ëª©ë¡ ìš”ì²­
+            printW.println(Protocol.REQUEST_FRIEND_LIST + "|" + "ALL!@#");
+            printW.flush();
+            aF.frame.setVisible(true);
+        }//ë©”ì¸ìŠ¤í¬ë¦° ê·¸ë£¹ì±„íŒ…ë°© íŒì—…ë©”ë‰´ í´ë¦­ì‹œ
+        else if(e.getSource() == mainS.groupC) {
+            mGC.frame.setVisible(true);
+            //ê·¸ë£¹ì±„íŒ…ì°½ ì—´ê¸° ìœ„í•´ ì¹œêµ¬ ëª©ë¡ ìš”ì²­
+            printW.println(Protocol.REQUEST_GROUPCHAT_LIST);
+            printW.flush();
+        }//ë©”ì¸ìŠ¤í¬ë¦° ì˜¤ëŠ˜ì˜ í•œë§ˆë”” ë³€ê²½ íŒì—…ë©”ë‰´ í´ë¦­ì‹œ
+        else if(e.getSource() == mainS.changeTL) {
+            //ë³€ê²½ëœ ë¬¸ìì—´ ë°›ì•„ì˜´
+            String cTL = JOptionPane.showInputDialog("Enter Today Line");
+            //ì„œë²„ì—ê²Œ ì˜¤ëŠ˜ì˜ í•œë§ˆë”” ë³€ê²½ ìš”ì²­
+            printW.println(Protocol.CHANGE_TODAY_LINE + "|" + cTL);
+            printW.flush();
+        }//ë©”ì¸ìŠ¤í¬ë¦°ì—ì„œ ì¹œêµ¬ í´ë¦­ì‹œ ë‚˜ì˜¤ëŠ” chat íŒì—…ë©”ë‰´ í´ë¦­ì‹œ
+        else if(e.getSource() == mainS.chat) {
+            List line = mainS.fList.getSelectedValuesList();
+            //ì„œë²„ì—ê²Œ ì±„íŒ…ë°© ì—´ê¸° ìš”ì²­
+            printW.println(Protocol.REQUEST_MAKE_GROUPCHAT + "|" + line);
+            printW.flush();
+        }//ë©”ì¸ìŠ¤í¬ë¦°ì—ì„œ ì¹œêµ¬ í´ë¦­ì‹œ ë‚˜ì˜¤ëŠ” ì •ë³´ íŒì—…ë©”ë‰´ í´ë¦­ì‹œ
+        else if(e.getSource() == mainS.info) {
+            //ì„œë²„ì—ê²Œ ì¹œêµ¬ ì •ë³´ ìš”ì²­
+            printW.println(Protocol.CHECK_FRIEND_INFO + "|" + mainS.fList.getSelectedValue());
+            printW.flush();
+        }//ì¹œêµ¬ ì‚­ì œ ê¸°ëŠ¥
+        else if(e.getSource()==mainS.delete) {
+            //ì„œë²„ì—ê²Œ ì¹œêµ¬ ì‚­ì œ ìš”ì²­ ë³´ëƒ„
+            printW.println(Protocol.REQUEST_FRIEND_DELETE+"|"+ mainS.fList.getSelectedValue());
+            printW.flush();
+        }//ì¹œêµ¬ ì¶”ê°€ ì°½ì—ì„œ í™•ì¸ ë²„íŠ¼ í´ë¦­ì‹œ
+        else if (e.getSource() == aF.summit) {
+            aF.frame.setVisible(false);
+        }//ì¹œêµ¬ ì¶”ê°€ì°½ì—ì„œ ìœ ì € ê²€ìƒ‰ì‹œ
+        else if (e.getSource() == aF.input) {
+            //ë§Œì•½ ê³µë°±ì´ë©´ ì „ì²´ ìœ ì € ìš”ì²­
+            if(aF.input.getText().equalsIgnoreCase("")) {
+                printW.println(Protocol.REQUEST_FRIEND_LIST + "|" + "ALL!@#");
+                printW.flush();
+            }
+            //ì•„ë‹ˆë©´ ì„œë²„ì—ê²Œ í•´ë‹¹ ë¬¸ìì—´í¬í•¨í•œ ìœ ì €ëª©ë¡ ìš”ì²­
+            else {
+                printW.println(Protocol.REQUEST_FRIEND_LIST + "|" + aF.input.getText());
+                printW.flush();
+            }
+        }//ì¹œêµ¬ ì¶”ê°€ì°½ì—ì„œ ìœ ì € í´ë¦­ì‹œ ë‚˜ì˜¤ëŠ” ì¹œêµ¬ì¶”ê°€ íŒì—…ë©”ë‰´ í´ë¦­ì‹œ
+        else if(e.getSource() == aF.addF) {
+            //ì„œë²„ì—ê²Œ ì¹œêµ¬ì¶”ê°€ ìš”ì²­
+            printW.println(Protocol.REQUEST_FRIEND_ADD + "|" + aF.wList.getSelectedValue());
+            printW.flush();
+        }//ê·¸ë£¹ì±„íŒ…ë°© ì„¤ì • ì°½ì—ì„œ ë§Œë“¤ê¸° ë²„íŠ¼ í´ë¦­ì‹œ
+        else if(e.getSource() == mGC.create) {
+            //ì„ íƒí•œ ì¹œêµ¬ ëª©ë¡ ê°’ ë°›ì•„ì„œ ì„œë²„ì—ê²Œ ì±„íŒ…ì°½ Open ìš”ì²­
+            List line = mGC.friendList.getSelectedValuesList();
+            printW.println(Protocol.REQUEST_MAKE_GROUPCHAT + "|" + line);
+            printW.flush();
+            mGC.frame.setVisible(false);
+        }
+    }
 
-	@Override
-	public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+    private void initPopupListener(JButton setting, JPopupMenu menu) {
+        menu.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                //íŒì—…ë©”ë‰´ ë‚˜ì˜¤ëŠ” ìœ„ì¹˜ ì„¤ì •
+                Object obj = e.getSource();
+                String l = obj.toString();
+                int x = l.indexOf("desiredLocationX");
+                int y = l.indexOf("desiredLocationY");
+                int label = l.indexOf("label");
+                int rX = Integer.parseInt(l.substring(x + 17, y - 1));
+                int rY = Integer.parseInt(l.substring(y + 17 ,label - 1));
+                Point p = new Point(rX,rY);
+                SwingUtilities.convertPointToScreen(p, setting);
+                menu.setLocation(rX,rY);
+            }
 
-	@Override
-	public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
 
-	@Override
-	public void popupMenuCanceled(PopupMenuEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+            }
 
-	@Override
-	public void valueChanged(ListSelectionEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+
+            }
+        });
+    }
+
+    private void initPopupListener(JList<String> list, JPopupMenu m) {
+        m.addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                //íŒì—…ë©”ë‰´ ë‚˜ì˜¤ëŠ” ìœ„ì¹˜ ì„¤ì •
+                Object obj = e.getSource();
+                String l = obj.toString();
+                int x = l.indexOf("desiredLocationX");
+                int y = l.indexOf("desiredLocationY");
+                int label = l.indexOf("label");
+                int rX = Integer.parseInt(l.substring(x + 17, y - 1));
+                int rY = Integer.parseInt(l.substring(y + 17 ,label - 1));
+                Point p = new Point(rX,rY);
+                SwingUtilities.convertPointToScreen(p, list);
+                m.setLocation(rX,rY);
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+
+            }
+        });
+
+    }
+
+    @Override
+    public void run() {
+        // ë°›ëŠ”ìª½
+        String line[] = null;
+        while (true) {
+            try {
+                line = br.readLine().split("\\|");
+                if (line == null) {
+                    br.close();
+                    printW.close();
+                    socket.close();
+
+                    System.exit(0);
+                } else if (line[0].compareTo(Protocol.IDSEARCHCHECK_OK) == 0) { // íšŒì›ê°€ì… ID ì¤‘ë³µ ì•ˆë¨
+                    JOptionPane.showMessageDialog(this, "Available");
+                    condition_Id = true;
+                } else if (line[0].compareTo(Protocol.IDSEARCHCHECK_NO) == 0) { // íšŒì›ê°€ì… ID ì¤‘ë³µ ë¨
+                    JOptionPane.showMessageDialog(this, "Unavailable");
+                    condition_Id = false;
+                } else if (line[0].compareTo(Protocol.ENTERLOGIN_OK) == 0) // ë¡œê·¸ì¸ ì„±ê³µ
+                {
+                    this.frame.setVisible(false);
+                    mainS.frame.setVisible(true);
+                    System.out.println(line);
+                    mainS.name.setText(line[1]);
+                    //ìì‹ ì˜ ì •ë³´ì„¤ì •
+                    mainS.information.setText(line[2] + " / " + line[4]);
+                    mainS.stateMessage.setText(line[3]);
+                    mainS.list.removeAllElements();
+                    //ì¹œêµ¬ëª©ë¡ ì„¤ì •
+                    String text[] = line[5].split(":");
+                    for (int i = 0; i < text.length; i++) {
+                        String t[] = text[i].split("&");
+                        if(t[0].equalsIgnoreCase("null") && t[1].equalsIgnoreCase("null")
+                                && t[2].equalsIgnoreCase("null") && t[3].equalsIgnoreCase("null") && t[4].equalsIgnoreCase("null")) {
+                        }
+                        else {
+                            mainS.list.addElement(t[0] +  "/" +  t[1] + "/" + t[2] + "/" + t[3] + "/" + t[4]);
+                        }
+                    }
+                }
+                else if (line[0].compareTo(Protocol.ENTERLOGIN_NO) == 0) // ë¡œê·¸ì¸ ì‹¤íŒ¨
+                {
+                    JOptionPane.showMessageDialog(this, line[1]);
+                    System.out.println("Login Failed");
+                }//ì˜¤ëŠ˜ì˜ í•œë§ˆë”” ë³€ê²½ ë˜ì—ˆì„ì‹œ
+                else if(line[0].compareTo(Protocol.UPDATE_ME) == 0) {
+                    mainS.stateMessage.setText(line[1]);
+                }//ì„œë²„ì—ì„œ ìµœì‹ í™” í•„ìš”í•˜ë‹¤ê³  ìš”ì²­ì‹œ
+                else if(line[0].compareTo(Protocol.UPDATED) == 0) {
+                    //ì„œë²„ì—ê²Œ ìµœì‹ í™” í•´ë‹¬ë¼ê³  ìš”ì²­
+                    printW.println(Protocol.UPDATE_PLZ);
+                    printW.flush();
+                }//ì„œë²„ê°€ ìœ ì €ì—ê²Œ ìµœì‹ í™” ë°ì´í„° ê°€ì ¸ì˜¤ë©´
+                else if(line[0].compareTo(Protocol.UPDATE_CONFIRM) == 0) {
+                    //ì¹œêµ¬ ëª©ë¡ ë‹¤ì‹œ ì„¤ì •
+                    mainS.list.removeAllElements();
+                    String text[] = line[1].split(":");
+                    //ë§Œì•½ ì¹œêµ¬ ì—†ìœ¼ë©´ ì•ˆë„ì›€
+                    for (int i = 0; i < text.length; i++) {
+                        String t[] = text[i].split("&");
+                        if(t[0].equalsIgnoreCase("null") && t[1].equalsIgnoreCase("null") && t[2].equalsIgnoreCase("null")
+                                && t[3].equalsIgnoreCase("null") && t[4].equalsIgnoreCase("null")) {
+                        }
+                        else {
+                            mainS.list.addElement(t[0] +  "/" +  t[1] + "/" + t[2] + "/" + t[3] + "/" + t[4]);
+                        }
+                    }
+                }//ì„œë²„ê°€ ì¹œêµ¬ì¶”ê°€ìš”ì²­ì°½ì˜ ìœ ì €ëª©ë¡ ìš”ì²­ì— ëŒ€í•œ ì •ë³´ ì¤„ì‹œ
+                else if(line[0].compareTo(Protocol.REQUEST_FRIEND_LIST_CONFIRM) == 0) {
+                    aF.list.removeAllElements();
+                    String text[] = line[1].split(":");
+                    //ë§Œì•½ ìœ ì €ì—†ìœ¼ë©´ ì•ˆë„ì›€
+                    for (int i = 0; i < text.length; i++) {
+                        String t[] = text[i].split("&");
+                        if(t[0].equalsIgnoreCase("null") && t[1].equalsIgnoreCase("null")
+                                && t[2].equalsIgnoreCase("null") && t[3].equalsIgnoreCase("null")) {
+                        }
+                        else {
+                            aF.list.addElement(t[0] +  "  " +  t[1] + "  " + t[2] + " " + t[3]);
+                        }
+                    }
+                }//ì¹œêµ¬ì˜ ì •ë³´í™•ì¸ ìš”ì²­ì— ëŒ€í•œ ì •ë³´ ë°›ì„ ì‹œ
+                else if(line[0].compareTo(Protocol.CONFIRM_FRIEND_INFO) == 0) {
+                    String text[] = line[1].split("&");
+                    String s = "offline";
+                    if(text[6].equalsIgnoreCase("1")) {
+                        s = "online";
+                    }
+                    JOptionPane.showMessageDialog(null, "ID : " + text[0] + "\nNICKNAME : " + text[1] + "\nNAME : " + text[2]
+                            + "\nEMAIL : " + text[3] + "\nAGE : " + text[4] + "\nTODAY_LINE : " + text[5] + "\nSTATE : " + s);
+                }//ì¹œêµ¬ ì‚­ì œê¸°ëŠ¥ ì¶”ê°€
+                else if(line[0].compareTo(Protocol.CONFIRM_FRIEND_DELETE) == 0) {
+                    String text[] = line[1].split("&");
+
+                    JOptionPane.showMessageDialog(null, text[0]+" is deleted!");
+                    printW.println(Protocol.UPDATE_PLZ);
+                    printW.flush();
+
+                }//ê·¸ë£¹ì±„íŒ…ë°© ì—´ë•Œ ì¹œêµ¬ ëª©ë¡ ì „ë‹¬ì— ëŒ€í•œ ì •ë³´ ë°›ì„ ì‹œ
+                else if(line[0].compareTo(Protocol.GROUPCHAT_LIST) == 0) {
+                    mGC.list.removeAllElements();
+                    String text[] = line[1].split(":");
+                    for (int i = 0; i < text.length; i++) {
+                        String t[] = text[i].split("&");
+                        if(t[0].equalsIgnoreCase("null") && t[1].equalsIgnoreCase("null")
+                                && t[2].equalsIgnoreCase("null") && t[3].equalsIgnoreCase("null") && t[4].equalsIgnoreCase("null")) {
+                        }
+                        else {
+                            mGC.list.addElement(t[0] +  "/" +  t[1] + "/" + t[2] + "/" + t[3] + "/" + t[4]);
+                        }
+                    }
+                }//ì±„íŒ…ë°© ì…ì¥ ìš”ì²­ ë°›ì„ì‹œ
+                else if(line[0].compareTo(Protocol.JOINROOM_REQUEST) == 0) {
+                    int check = JOptionPane.showConfirmDialog(null, line[1] + " invited you. Do you Join Chat?", "REQUEST JOIN" ,JOptionPane.YES_NO_OPTION);
+                    if(check == 0) {
+                        //ìˆ˜ë½í•˜ë©´ ìˆ˜ë½í–ˆë‹¤ê³  ì„œë²„ì—ê²Œ ì•Œë¦¼
+                        printW.println(Protocol.JOINROOM_YES + "|" + line[1] + "|" +line[2]);
+                        printW.flush();
+                    }
+                    else {
+                        //ê±°ì ˆí–ˆë‹¤ê³  ì„œë²„ì—ê²Œ ì•Œë¦¼
+                        printW.println(Protocol.JOINROOM_NO + "|" +  line[1] + "|" +line[2]);
+                        printW.flush();
+                    }
+                }
+                else if (line[0].compareTo(Protocol.ROOMMAKE_OK) == 0) // ë°©ë§Œë“¤ì–´ì§
+                {
+                    //ì±„íŒ…ìŠ¤í¬ë¦°ì„ ìƒˆë¡­ê²Œ ë§Œë“¤ê³  ì±„íŒ…ë°© ì •ë³´ì— ì €ì¥
+                    System.out.println(Protocol.ROOMMAKE_OK);
+                    chattingScreen chat = new chattingScreen(line[2]);
+                    chat_room.put(Integer.parseInt(line[2]), chat);
+
+                }
+                else if (line[0].compareTo(Protocol.ENTERROOM_OK1) == 0) // ë°©ì…ì¥ ìš”ì²­ë°›ì€ ìœ ì €ê°€ ì…ì¥ì‹œ
+                {
+                    //ì±„íŒ…ìŠ¤í¬ë¦°ì„ ìƒˆë¡­ê²Œ ë§Œë“¤ê³  ì±„íŒ…ë°© ì •ë³´ì— ì €ì¥
+                    chattingScreen chat = new chattingScreen(line[2]);
+                    chat_room.put(Integer.parseInt(line[2]), chat);
+                }
+                else if (line[0].compareTo(Protocol.ENTERROOM_USERLISTSEND) == 0) // ì±„íŒ…ë°© ìœ ì € ë¦¬ìŠ¤íŠ¸ ìƒˆë¡œê³ ì¹¨
+                {
+
+                    String roomMember[] = line[1].split("%");// ë£¸ì— ë“¤ì–´ì˜¨ì‚¬ëŒë“¤
+                    String lineList = "";
+                    for (int i = 0; i < roomMember.length; i++) {
+                        lineList += (roomMember[i] + "\n");
+                    }
+                    System.out.println(lineList);
+                    //ì±„íŒ…ë°© ëª©ë¡ì—ì„œ í•´ë‹¹ë°© ì¶”ì¶œí•´ ì„¤ì •í•´ì¤Œ
+                    chattingScreen temp = chat_room.get(Integer.parseInt(line[3]));
+                    temp.textField.setEditable(true);
+                    temp.partList.setText(lineList);
+                    temp.messageArea.append(line[2] + "\n");
+                }//ìƒëŒ€ë°©ì´ ì±„íŒ…ì¹œ ì •ë³´ê°€ ì„œë²„ë¥¼ í†µí•´ ë„˜ì–´ì˜¬ì‹œ
+                else if (line[0].compareTo(Protocol.CHATTINGSENDMESSAGE_OK) == 0) {
+                    //ì±„íŒ…ë°© ëª©ë¡ì—ì„œ í•´ë‹¹ë°© ì¶”ì¶œí•´ ì„¤ì •í•´ì¤Œ
+                    chattingScreen temp = chat_room.get(Integer.parseInt(line[3]));
+                    temp.messageArea.append("[" + line[1] + "] :" + line[2] + "\n");
+                }//ìƒëŒ€ë°©ì´ ë°©ì…ì¥ ìš”ì²­ ê±°ì ˆì‹œ
+                else if(line[0].compareTo(Protocol.ENTERROOM_REJECT) == 0) {
+                    //ì±„íŒ…ë°© ëª©ë¡ì—ì„œ í•´ë‹¹ë°© ì¶”ì¶œí•´ ì„¤ì •í•´ì¤Œ
+                    chattingScreen temp = chat_room.get(Integer.parseInt(line[2]));
+                    temp.frame.setVisible(false);
+                    temp.partList.setText("");
+                    JOptionPane.showMessageDialog(null, line[1] + " reject join chat.");
+                }//ìœ ì €ê°€ ì±„íŒ…ë°©ì„ ë‚˜ê°€ë©´
+                else if(line[0].compareTo(Protocol.EXIT_CHATTINGROOM) == 0) {
+                    //ì±„íŒ…ë°© ëª©ë¡ì—ì„œ í•´ë‹¹ë°© ì¶”ì¶œí•´ ì„¤ì •í•´ì¤Œ
+                    chattingScreen temp = chat_room.get(Integer.parseInt(line[1]));
+                    temp.frame.setVisible(false);
+                    temp.partList.setText("");
+                    temp.textField.setEditable(false);
+                    JOptionPane.showMessageDialog(null, "All user exit.");
+                }
+
+            } catch (IOException io) {
+                io.printStackTrace();
+            }
+
+        } // while
+
+
+    }
+
+    @Override
+    public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void popupMenuCanceled(PopupMenuEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void valueChanged(ListSelectionEvent e) {
+        // TODO Auto-generated method stub
+
+    }
 }

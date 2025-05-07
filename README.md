@@ -1,4 +1,4 @@
-# Network_term_project
-네트워크 텀 프로젝트 결과물
+# Chatting Only Using JAVA
+## 자바를 사용한 채팅 프로그램
 
-유튜브 주소 : https://youtu.be/9NSnzEFeMhs
+프로젝트 소개 : https://youtu.be/9NSnzEFeMhs

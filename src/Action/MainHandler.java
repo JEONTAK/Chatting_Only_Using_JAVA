@@ -1,75 +1,74 @@
 package Action;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import DO.Room;
+import DO.User;
+
+import java.io.*;
 import java.net.Socket;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
-import DO.Room;
-import DO.User;
-
 public class MainHandler extends Thread {
-	private BufferedReader br;
-	private BufferedReader br2;
-	private PrintWriter printW;
-	private Socket socket;
-	private Connection conn;
-	private PreparedStatement pstmt;
-	private User user;
-	
-	private ArrayList<MainHandler>  connUserList; //¿¬°á »ç¿ëÀÚ
-	private ArrayList<Room> roomtotalList; // ÀüÃ¼ ¹æ¸®½ºÆ®
-	private Room priRoom; // »ç¿ëÀÚ°¡ ÀÖ´Â ¹æ
-	private String privateKey;//»ç¼³Å° Á¤ÀÇ
-	// ¼ÒÄÏ, ÀüÃ¼»ç¿ëÀÚ,´ë±â¹æ,¹æ¸®½ºÆ®,JDBC
-	public MainHandler(Socket socket, ArrayList<MainHandler>  connUserList,
-			ArrayList<Room> roomtotalList, Connection conn) throws IOException {
-		this.user = new User();
-		this.priRoom = new Room();
-		this.socket = socket;
-		this.connUserList = connUserList;
-		this.roomtotalList = roomtotalList;
-		this.conn = conn;
+    private BufferedReader chatReader;
+    private BufferedReader privateKeyReader;
+    private PrintWriter printW;
+    private Socket socket;
+    private Connection conn;
+    private PreparedStatement pstmt;
+    private User user;
 
-		br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		printW = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+    // ì—°ê²°ëœ ì‚¬ìš©ì ë¦¬ìŠ¤íŠ¸
+    private ArrayList<MainHandler> connUserList;
+    // ì „ì²´ ë°© ë¦¬ìŠ¤íŠ¸
+    private ArrayList<Room> roomtotalList;
+    // ì‚¬ìš©ìê°€ ì¡´ì¬í•˜ëŠ” ë°©
+    private Room priRoom;
+    // ì‚¬ì„¤ í‚¤ ì •ì˜
+    private String privateKey;
 
-		//RSA
-				String filepath = "./key2.txt";//ÆÄÀÏ °æ·Î
-				br2 = new BufferedReader(new InputStreamReader(new FileInputStream(filepath )));
-				privateKey=br2.readLine();
-		//RSAÁ¾·á
-		
-	}
+    // Parameter : ì†Œì¼“, ì—°ê²°ëœ ì‚¬ìš©ì ë¦¬ìŠ¤íŠ¸, ì „ì²´ ë°© ë¦¬ìŠ¤íŠ¸, JDBCì™€ ì—°ê²°
+    public MainHandler(Socket socket, ArrayList<MainHandler> connUserList,
+                       ArrayList<Room> roomtotalList, Connection conn) throws IOException {
+        this.user = new User();
+        this.priRoom = new Room();
+        this.socket = socket;
+        this.connUserList = connUserList;
+        this.roomtotalList = roomtotalList;
+        this.conn = conn;
 
-	@Override
-	public void run() {
-		// µ¥ÀÌÅÍ ÀÔ·Â¹ŞÀ½ µ¥ÀÌÅÍÆÄ½Ì -> °á°ú ½ÇÇàÇØÁà¾ßÇÔ
-		try {
+        chatReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        printW = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
 
-			String[] line = null;
-			while (true) {
-				line = br.readLine().split("\\|");
+        //RSA
+        String filepath = "./key2.txt"; // íŒŒì¼ ê²½ë¡œ
+        privateKeyReader = new BufferedReader(new InputStreamReader(new FileInputStream(filepath)));
+        privateKey = privateKeyReader.readLine();
+        //RSA
 
-				if (line == null) {
-					break;
-				}
-				if (line[0].compareTo(Protocol.REGISTER) == 0) // [È¸¿ø°¡ÀÔ]
-				{
-					String userContent[] = line[1].split("%");
-					
-					String sql2="UPDATE id_generator SET seq_currval=LAST_INSERT_ID(seq_currval+1)";
-					pstmt = conn.prepareStatement(sql2);
+    }
+
+    @Override
+    public void run() {
+        // ë°ì´í„° ì…ë ¥ ë°›ìŒ -> ë°ì´í„° íŒŒì‹± -> ê²°ê³¼ ì‹¤í–‰í•´ì£¼ì–´ì•¼í•¨.
+        try {
+
+            String[] line = null;
+            while (true) {
+                line = chatReader.readLine().split("\\|");
+
+                if (line == null) {
+                    break;
+                }
+                if (line[0].compareTo(Protocol.REGISTER) == 0) { // íšŒì›ê°€ì…
+                    String userContent[] = line[1].split("%");
+
+                    String sql2 = "UPDATE id_generator SET seq_currval=LAST_INSERT_ID(seq_currval+1)";
+                    pstmt = conn.prepareStatement(sql2);
                     pstmt.executeUpdate();
-                    
-                    String sql = "Insert into UserContent(priNumber,id,password,nickName, name ,email, age, today_line, state) "
+
+                    String sql = "Insert into UserContent(priNumber, id, password, nickName, name ,email, age, today_line, state) "
                             + "values(LAST_INSERT_ID(),?,?,?,?,?,?,?,?)";
                     pstmt = conn.prepareStatement(sql);
                     pstmt.setString(1, userContent[0]);
@@ -80,556 +79,538 @@ public class MainHandler extends Thread {
                     pstmt.setString(6, userContent[5]);
                     pstmt.setString(7, userContent[6]);
                     pstmt.setString(8, userContent[7]);
-					int su = pstmt.executeUpdate(); // Ç×»ó ¸î°³¸¦ ½ÇÇà(CRUD)ÇÑÁö °¹¼ö¸¦ return
-					System.out.println(su + "È¸¿ø°¡ÀÔ[DB]");
+                    int su = pstmt.executeUpdate(); // ëª‡ê°œ Insert í•œì§€ ê°¯ìˆ˜ë¥¼ ì—…ë°ì´íŠ¸
+                    System.out.println(su + "íšŒì›ê°€ì…[DB]");
 
-				} else if (line[0].compareTo(Protocol.IDSEARCHCHECK) == 0) // È¸¿ø°¡ÀÔ ID Áßº¹Ã¼Å©
-				{
-					System.out.println(line[0] + "/" + line[1]);
-					String sql = "select * from UserContent where id = '" + line[1] + "'"; //ÀÔ·ÂÇÑ ID°¡ ±âÁ¸ DB¿¡ Á¸ÀçÇÏ´ÂÁö È®ÀÎ
-					pstmt = conn.prepareStatement(sql);
-					ResultSet rs = pstmt.executeQuery(sql);
-					String name = null;
-					int count = 0;
-					while (rs.next()) {
-						name = rs.getString("id");
-						if (name.compareTo(line[1]) == 0) {
-							count++;
-						}
-					}
-					System.out.println(count);
-					if (count == 0) // ID°¡ Áßº¹ ¾ÈµÇ¸é °¡ÀÔ °¡´É
-					{
-						printW.println(Protocol.IDSEARCHCHECK_OK + "|" + "MESSAGE");
-						printW.flush();
-					} else { //ID°¡ Áßº¹µÈ´Ù¸é °¡ÀÔ ºÒ°¡´É
-						printW.println(Protocol.IDSEARCHCHECK_NO + "|" + "MESSAGE");
-						printW.flush();
-					}
-				} else if (line[0].compareTo(Protocol.ENTERLOGIN) == 0) // [login]
-				{
+                } else if (line[0].compareTo(Protocol.IDSEARCHCHECK) == 0) { // íšŒì›ê°€ì… ID ì¤‘ë³µ ì²´í¬
+                    System.out.println(line[0] + "/" + line[1]);
+                    //ì…ë ¥í•œ IDê°€ ê¸°ì¡´ DBì— ì¡´ì¬í•˜ëŠ”ì§€ í™•ì¸
+                    String sql = "select * from UserContent where id = '" + line[1] + "'";
+                    pstmt = conn.prepareStatement(sql);
+                    ResultSet rs = pstmt.executeQuery(sql);
+                    String name = null;
+                    int count = 0;
+                    while (rs.next()) {
+                        name = rs.getString("id");
+                        if (name.compareTo(line[1]) == 0) {
+                            count++;
+                        }
+                    }
+                    System.out.println(count);
+                    // IDê°€ ì¤‘ë³µ ì•ˆë˜ë©´ ê°€ì… ê°€ëŠ¥
+                    if (count == 0) {
+                        printW.println(Protocol.IDSEARCHCHECK_OK + "|" + "MESSAGE");
+                        printW.flush();
+                    } else {
+                        printW.println(Protocol.IDSEARCHCHECK_NO + "|" + "MESSAGE");
+                        printW.flush();
+                    }
+                } else if (line[0].compareTo(Protocol.ENTERLOGIN) == 0) { // [login]
 
-					boolean con = true; // ±âÁ¸¿¡ ·Î±×ÀÎµÇ¾îÀÖ´ÂÁö ¾ÈµÇ¾îÀÖ´ÂÁö º¯¼ö
-					System.out.println("login");
-					String userContent[] = line[1].split("%");
+                    boolean con = true; // ë¡œê·¸ì¸ ìœ ë¬´ í™•ì¸
+                    System.out.println("login");
+                    String userContent[] = line[1].split("%");
 
-					System.out.println(userContent[0] + "/" + userContent[1]);
+                    System.out.println(userContent[0] + "/" + userContent[1]);
 
-					for (int i = 0; i < connUserList.size(); i++) {
-						if ((connUserList.get(i).user.getIdName()).compareTo(userContent[0]) == 0) {
-							con = false;
-						}
-					}
-					if (con) { //¸¸¾à ·Î±×ÀÎÀÌ ¾ÈµÇ¾îÀÖ¾ú´Ù¸é
-						String sql = "select * from UserContent where id = '" + userContent[0]+"'";
+                    for (int i = 0; i < connUserList.size(); i++) {
+                        if ((connUserList.get(i).user.getIdName()).compareTo(userContent[0]) == 0) {
+                            con = false;
+                        }
+                    }
 
-						pstmt = conn.prepareStatement(sql);
-						ResultSet rs = pstmt.executeQuery(sql);
-						String pw=null;
-						int count = 0;
-						
-						while (rs.next()) { //ÀÔ·ÂÇÑ ID¿Í °°Àº row¸¦ ¹Ş¾Æ¿È
-							user.setPassword(userContent[1]);
-							user.setPryNumber(rs.getInt("priNumber"));
-							user.setIdName(rs.getString("ID"));
-				            user.setPassword("secret");
-							user.setnickName(rs.getString("nickName"));
-							user.setName(rs.getString("NAME"));
-							user.setEmail(rs.getString("email"));
-							user.setAge(rs.getString("AGE"));
-							user.setToday_line(rs.getString("today_line"));
-							user.setState(rs.getInt("state"));
-							pw=RSA.decode(rs.getString("password"), privateKey); //ÆĞ½º¿öµå¸¦ RSA¾Ë°í¸®ÁòÀ¸·Î ¾ÏÈ£È­
-						}
-						if(pw==null);
-						else if(pw.compareTo(RSA.decode(userContent[1], privateKey))==0) //¾ÏÈ£È­µÈ ÆĞ½º¿öµå°¡ ±âÁ¸ ÀúÀåµÈ °Í°ú °°´Ù¸é
-                        	 count++;
-						System.out.println(count);
+                    //ë§Œì•½ ë¡œê·¸ì¸ì´ ë˜ì–´ ìˆì§€ ì•Šë‹¤ë©´
+                    if (con) {
+                        String sql = "select * from UserContent where id = '" + userContent[0] + "'";
 
-						if (count == 0) // ID,printW Æ²¸®¸é ¼¼ÆÃÇÑ userÁ¤º¸ ÃÊ±âÈ­
-						{
-							printW.println(Protocol.ENTERLOGIN_NO + "|" + "·Î±×ÀÎ¿¡ ½ÇÆĞÇÏ¿´½À´Ï´Ù");
-							printW.flush();
+                        pstmt = conn.prepareStatement(sql);
+                        ResultSet rs = pstmt.executeQuery(sql);
+                        String pw = null;
+                        int count = 0;
 
-							user.setPryNumber(0);
-							user.setIdName("");
-							user.setPassword("");
-							user.setnickName("");
-							user.setName("");
-							user.setEmail("");
-							user.setAge("");
-							user.setToday_line("");
-							user.setState(0);
+                        while (rs.next()) { // ì…ë ¥í•œ IDì™€ ê°™ì€ ë°ì´í„° DBì—ì„œ ê°€ì ¸ì™€ ì €ì¥.
+                            user.setPassword(userContent[1]);
+                            user.setPryNumber(rs.getInt("priNumber"));
+                            user.setIdName(rs.getString("ID"));
+                            user.setPassword("secret");
+                            user.setnickName(rs.getString("nickName"));
+                            user.setName(rs.getString("NAME"));
+                            user.setEmail(rs.getString("email"));
+                            user.setAge(rs.getString("AGE"));
+                            user.setToday_line(rs.getString("today_line"));
+                            user.setState(rs.getInt("state"));
+                            pw = RSA.decode(rs.getString("password"), privateKey); //ë¹„ë°€ë²ˆí˜¸ë¥¼ RSA ì•Œê³ ë¦¬ì¦˜ìœ¼ë¡œ ì•”í˜¸í™”
+                        }
+                        if (pw == null) ;
+                        else if (pw.compareTo(RSA.decode(userContent[1], privateKey)) == 0) // ì•”í˜¸í™” ëœ ë¹„ë°€ë²ˆí˜¸ê°€ ê¸°ì¡´ ì €ì¥ëœ ê²ƒê³¼ ê°™ë‹¤ë©´
+                            count++;
+                        System.out.println(count);
 
-						} else { // ·Î±×ÀÎ µÇ¾úÀ»¶§
-							String sql1= "UPDATE usercontent SET state = 1 where id = '" + user.getIdName() + "'"; //»ç¿ëÀÚÀÇ »óÅÂ¸¦ onlineÀ¸·Î ¹Ù²Ş
-		                    pstmt=conn.prepareStatement(sql1);
-		                    pstmt.executeUpdate();
-		                    
-		                    sql1= "UPDATE friendList SET friendState = 1 where friendid = '" + user.getIdName() + "'";
-		                    pstmt=conn.prepareStatement(sql1);
-		                    pstmt.executeUpdate();
-		                    
-							connUserList.add(this); // Á¢¼ÓÀÚ ÀÎ¿ø¼ö Ãß°¡
-							String userline = "";
-							String sql2 = "select friendId, friendName, friendNickname, friendtoday_line , friendState from friendList where id = '" + user.getIdName()
-									+ "'";
-							pstmt = conn.prepareStatement(sql2);
-							ResultSet rs1 = pstmt.executeQuery(sql2);
-							
-								while(rs1.next()) { //¹Ş¾Æ¿Â Ä£±¸ ¼ö ¸¸Å­ ¹İº¹
-									String s = "offline";
-									if(rs1.getString("friendState").equalsIgnoreCase("1")) { //friendState°¡ 1ÀÏ °æ¿ì
-										s = "online"; //onlineÀ¸·Î Ç¥½Ã
-									}
-									userline += (rs1.getString("friendId") + "&" + rs1.getString("friendName") + "&" + 
-											 rs1.getString("friendNickname") + "&" + rs1.getString("friendtoday_line") + "&" + s +":");
-								}
-								if(userline.length() == 0) {
-									userline = "null&null&null&null&null";
-								}
-							System.out.println(Protocol.ENTERLOGIN_OK + "|" + user.getName() + "|"+ user.getIdName()  + "|"+ user.getToday_line() +
-									"|" + user.getEmail() +"|" + userline);
-							printW.println(Protocol.ENTERLOGIN_OK + "|" + user.getName() + "|"+ user.getIdName()  + "|"+ user.getToday_line() +
-									"|" + user.getEmail() +"|" + userline);
-							printW.flush();
-							
-							for (int i = 0; i < connUserList.size(); i++) {
-								connUserList.get(i).printW.println(Protocol.UPDATED);
-								connUserList.get(i).printW.flush();
-							}
-						}
-						System.out.println(user.toString());
-						
-					} else {
-						printW.println(Protocol.ENTERLOGIN_NO + "|" + "ÀÌ¹Ì ·Î±×ÀÎ ÁßÀÔ´Ï´Ù.");
-						printW.flush();
-					}
+                        if (count == 0) // ID ë° printW í‹€ë¦¬ë©´ ì„¸íŒ…í•œ user ì •ë³´ ì´ˆê¸°í™”
+                        {
+                            printW.println(Protocol.ENTERLOGIN_NO + "|" + "ë¡œê·¸ì¸ì— ì‹¤íŒ¨í•˜ì˜€ìŠµë‹ˆë‹¤.");
+                            printW.flush();
 
-				} else if (line[0].compareTo(Protocol.EXITMAINROOM) == 0) { // ¸ŞÀÎ¿¡¼­ ·Î±×ÀÎÆäÀÌÁö(logout);
-					
-					String sql2= "UPDATE usercontent SET state = 0 where id = '" + user.getIdName() + "'"; //logout½Ã user state¸¦ 0À¸·Î ¸¸µé¾î offlineÇ¥½Ã
-                    pstmt=conn.prepareStatement(sql2);
+                            user.setPryNumber(0);
+                            user.setIdName("");
+                            user.setPassword("");
+                            user.setnickName("");
+                            user.setName("");
+                            user.setEmail("");
+                            user.setAge("");
+                            user.setToday_line("");
+                            user.setState(0);
+
+                        } else { // ë¡œê·¸ì¸ ë˜ì—ˆì„ë•Œ
+                            String sql1 = "UPDATE usercontent SET state = 1 where id = '" + user.getIdName() + "'"; //ì‚¬ìš©ìì˜ ìƒíƒœë¥¼ onlineìœ¼ë¡œ ë°”ê¿ˆ
+                            pstmt = conn.prepareStatement(sql1);
+                            pstmt.executeUpdate();
+
+                            sql1 = "UPDATE friendList SET friendState = 1 where friendid = '" + user.getIdName() + "'";
+                            pstmt = conn.prepareStatement(sql1);
+                            pstmt.executeUpdate();
+
+                            connUserList.add(this); // ì ‘ì†í•œ ì‚¬ìš©ì ë¦¬ìŠ¤íŠ¸ì— ì¶”ê°€
+                            String userline = "";
+                            String sql2 = "select friendId, friendName, friendNickname, friendtoday_line , friendState from friendList where id = '" + user.getIdName()
+                                    + "'";
+                            pstmt = conn.prepareStatement(sql2);
+                            ResultSet rs1 = pstmt.executeQuery(sql2);
+
+                            while (rs1.next()) { //ì¹œêµ¬ í‘œì‹œ
+                                String s = "offline";
+                                if (rs1.getString("friendState").equalsIgnoreCase("1")) { //ì¹œêµ¬ ìƒíƒœê°€ 1 : onlineì¼ ê²½ìš°
+                                    s = "online"; //onlineìœ¼ë¡œ í‘œì‹œ
+                                }
+                                userline += (rs1.getString("friendId") + "&" + rs1.getString("friendName") + "&" +
+                                        rs1.getString("friendNickname") + "&" + rs1.getString("friendtoday_line") + "&" + s + ":");
+                            }
+                            if (userline.length() == 0) {
+                                userline = "null&null&null&null&null";
+                            }
+                            System.out.println(Protocol.ENTERLOGIN_OK + "|" + user.getName() + "|" + user.getIdName() + "|" + user.getToday_line() +
+                                    "|" + user.getEmail() + "|" + userline);
+                            printW.println(Protocol.ENTERLOGIN_OK + "|" + user.getName() + "|" + user.getIdName() + "|" + user.getToday_line() +
+                                    "|" + user.getEmail() + "|" + userline);
+                            printW.flush();
+
+                            for (int i = 0; i < connUserList.size(); i++) {
+                                connUserList.get(i).printW.println(Protocol.UPDATED);
+                                connUserList.get(i).printW.flush();
+                            }
+                        }
+                        System.out.println(user.toString());
+
+                    } else {
+                        printW.println(Protocol.ENTERLOGIN_NO + "|" + "ì´ë¯¸ ë¡œê·¸ì¸ ì¤‘ì…ë‹ˆë‹¤.");
+                        printW.flush();
+                    }
+
+                } else if (line[0].compareTo(Protocol.EXITMAINROOM) == 0) { // ë©”ì¸ì—ì„œ ë¡œê·¸ì¸ í˜ì´ì§€(logout);
+
+                    String sql2 = "UPDATE usercontent SET state = 0 where id = '" + user.getIdName() + "'"; // ë¡œê·¸ì•„ì›ƒ ì‹œ userstateë¥¼ 0ìœ¼ë¡œ ë§Œë“¤ì–´ offlineìœ¼ë¡œ í‘œì‹œ
+                    pstmt = conn.prepareStatement(sql2);
                     pstmt.executeUpdate();
-                    
-                    sql2= "UPDATE friendList SET friendState = 0 where friendid = '" + user.getIdName() + "'";
-                    pstmt=conn.prepareStatement(sql2);
+
+                    sql2 = "UPDATE friendList SET friendState = 0 where friendid = '" + user.getIdName() + "'";
+                    pstmt = conn.prepareStatement(sql2);
                     pstmt.executeUpdate();
-                    
-					connUserList.remove(this); //ÇöÀç Á¢¼ÓÀÚ ¸®½ºÆ®¿¡¼­ Á¦°Å
-					user.setPryNumber(0);
-					user.setIdName("");
-					user.setPassword("");
-					user.setnickName("");
-					user.setName("");
-					user.setEmail("");
-					user.setAge("");
-					user.setToday_line("");
-					user.setState(0);
-					System.out.println(Protocol.EXITMAINROOM);
-					
-					for (int i = 0; i < connUserList.size(); i++) { //ÇöÀç Á¢¼ÓÀÚ ¸®½ºÆ®¿Í »óÅÂ¸¦ ¾÷µ¥ÀÌÆ® ÈÄ ´Ù¸¥ »ç¿ëÀÚ¿¡°Ô Ç¥½Ã
-						connUserList.get(i).printW.println(Protocol.UPDATED);
-						connUserList.get(i).printW.flush();
-					}
-				} 
-				else if (line[0].compareTo(Protocol.REQUEST_MAKE_GROUPCHAT) == 0) { // ¹æ¸¸µé±â
-					int l = line[1].length();
-					line[1] = line[1].substring(1,l - 1);
-					System.out.println(line[1]);
-					
-					String userContent[] = line[1].split(", ");
-					String[][] person= new String[userContent.length][];
-					for(int i = 0 ; i < userContent.length ; i++) {
-						person[i] = userContent[i].split("/");
-						for(int j = 0 ; j < person[i].length ; j++) {
-							System.out.println(person[i][j]);
-						}
-					}
-					Room tempRoom = new Room(); //¹æ »ı¼º
-                    
-					tempRoom.setUserCount(1); //¹æ Á¢¼ÓÀÚ ¼ö 1·Î ¼³Á¤
-					tempRoom.setMasterName(user.getIdName()); //¹æÀå ID¸¦ ¹æ ¸¸µç »ç¿ëÀÚ ID·Î ¼³Á¤
-					
-					String sql2="UPDATE room_number SET room_num = LAST_INSERT_ID(room_num + 1);"; 
-					pstmt = conn.prepareStatement(sql2);
+
+                    connUserList.remove(this); //ì ‘ì†í•œ ì‚¬ìš©ì ë¦¬ìŠ¤íŠ¸ì—ì„œ ì œê±°
+                    user.setPryNumber(0);
+                    user.setIdName("");
+                    user.setPassword("");
+                    user.setnickName("");
+                    user.setName("");
+                    user.setEmail("");
+                    user.setAge("");
+                    user.setToday_line("");
+                    user.setState(0);
+                    System.out.println(Protocol.EXITMAINROOM);
+
+                    for (int i = 0; i < connUserList.size(); i++) { //ì ‘ì†í•œ ì‚¬ìš©ì ë¦¬ìŠ¤íŠ¸ì™€ ìƒíƒœë¥¼ ì—…ë°ì´íŠ¸ í›„ ë‹¤ë¥¸ ì‚¬ìš©ìì—ê²Œ í‘œì‹œ
+                        connUserList.get(i).printW.println(Protocol.UPDATED);
+                        connUserList.get(i).printW.flush();
+                    }
+                } else if (line[0].compareTo(Protocol.REQUEST_MAKE_GROUPCHAT) == 0) { // ë°©ë§Œë“¤ê¸°
+                    int l = line[1].length();
+                    line[1] = line[1].substring(1, l - 1);
+                    System.out.println(line[1]);
+
+                    String userContent[] = line[1].split(", ");
+                    String[][] person = new String[userContent.length][];
+                    for (int i = 0; i < userContent.length; i++) {
+                        person[i] = userContent[i].split("/");
+                        for (int j = 0; j < person[i].length; j++) {
+                            System.out.println(person[i][j]);
+                        }
+                    }
+                    Room tempRoom = new Room(); //ë°© ìƒì„±
+
+                    tempRoom.setUserCount(1); //ë°© ì ‘ì†ì ìˆ˜ 1ë¡œ ì„¤ì •
+                    tempRoom.setMasterName(user.getIdName()); //ë°©ì¥ IDë¥¼ ë°© ë§Œë“  ì‚¬ìš©ì IDë¡œ ì„¤ì •
+
+                    String sql2 = "UPDATE room_number SET room_num = LAST_INSERT_ID(room_num + 1);";
+                    pstmt = conn.prepareStatement(sql2);
                     pstmt.executeUpdate();
                     String sql = "select room_num from room_number";
                     pstmt = conn.prepareStatement(sql);
                     ResultSet rs = pstmt.executeQuery(sql);
                     int priNumber = 0;
-                    while(rs.next()) {
-                    	priNumber = rs.getInt("room_num");
+                    while (rs.next()) {
+                        priNumber = rs.getInt("room_num");
                     }
-					System.out.println("userContent Length : " + userContent.length);
-					if (priNumber != 0) { //¹æ ³Ñ¹ö¸¦ ºÒ·¯¿ÔÀ¸¸é
-						tempRoom.setrID(priNumber); //ÇöÀç ¹æÀÇ ¹øÈ£¸¦ ÁöÁ¤ÇØÁÖ°í
-						tempRoom.setRoomInUserList(user.getIdName()); //»ç¿ëÀÚ¸®½ºÆ®¿¡ ÇöÀç »ç¿ëÀÚÀÇ ID¸¦ ³Ö´Â´Ù
-						roomtotalList.add(tempRoom);
-						priRoom = tempRoom; // ÇöÀç ·ëÀ» ÁöÁ¤ÇÔ
-					}
-					System.out.println(roomtotalList.size());
-					printW.println(Protocol.ROOMMAKE_OK + "|" + tempRoom.getMasterName() + "|" + priNumber);
-					printW.flush();
-					for (int i = 0; i < connUserList.size(); i++) { //Á¢¼Ó À¯Àú ¸®½ºÆ®ÀÇ »çÀÌÁî¸¸Å­ ¹İº¹
-						System.out.println("IDDDd" + connUserList.get(i).user.getIdName());
-						for(int j = 0 ; j < userContent.length ; j++) {
-							if (connUserList.get(i).user.getIdName().equals(person[j][0])) {
-								connUserList.get(i).printW.println(Protocol.JOINROOM_REQUEST + "|" + tempRoom.getMasterName() 
-										+ "|" + priNumber);
-								connUserList.get(i).printW.flush();
-								System.out.println(Protocol.JOINROOM_REQUEST);
-							} 
-						}
-					}
-				}  
-		
-				else if (line[0].compareTo(Protocol.JOINROOM_YES) == 0) { // [¹æ ÀÔÀå¹öÆ°]
+                    System.out.println("userContent Length : " + userContent.length);
+                    if (priNumber != 0) { //ë°© ë²ˆí˜¸ ë¶ˆëŸ¬ì™”ìœ¼ë©´
+                        tempRoom.setrID(priNumber); //í˜„ì¬ ë°©ì˜ ë²ˆí˜¸ë¥¼ ì§€ì •
+                        tempRoom.setRoomInUserList(user.getIdName()); //ë°© ì‚¬ìš©ì ë¦¬ìŠ¤íŠ¸ì— í˜„ì¬ ì‚¬ìš©ìì˜ IDë¥¼ ë„£ìŒ
+                        roomtotalList.add(tempRoom);
+                        priRoom = tempRoom; // í˜„ì¬ ë£¸ì„ ì§€ì •
+                    }
+                    System.out.println(roomtotalList.size());
+                    printW.println(Protocol.ROOMMAKE_OK + "|" + tempRoom.getMasterName() + "|" + priNumber);
+                    printW.flush();
+                    for (int i = 0; i < connUserList.size(); i++) { //ì ‘ì† ìœ ì € ë¦¬ìŠ¤íŠ¸ì˜ ì‚¬ì´ì¦ˆ ë§Œí¼ ë°˜ë³µ
+                        System.out.println("IDDDd" + connUserList.get(i).user.getIdName());
+                        for (int j = 0; j < userContent.length; j++) {
+                            if (connUserList.get(i).user.getIdName().equals(person[j][0])) {
+                                connUserList.get(i).printW.println(Protocol.JOINROOM_REQUEST + "|" + tempRoom.getMasterName()
+                                        + "|" + priNumber);
+                                connUserList.get(i).printW.flush();
+                                System.out.println(Protocol.JOINROOM_REQUEST);
+                            }
+                        }
+                    }
+                } else if (line[0].compareTo(Protocol.JOINROOM_YES) == 0) { // ë°© ì…ì¥ ë²„íŠ¼ í´ë¦­
 
-					String thisName = connUserList.get(connUserList.indexOf(this)).user.getIdName(); //Á¢¼ÓÀÚ ¸®½ºÆ®¿¡¼­ »ç¿ëÀÚÀÇ ID¸¦ ¹Ş¾Æ¿È.
+                    String thisName = connUserList.get(connUserList.indexOf(this)).user.getIdName(); //ì ‘ì†ì ë¦¬ìŠ¤íŠ¸ì—ì„œ ì‚¬ìš©ìì˜ IDë¥¼ ë°›ì•„ì˜´
 
-					int roomid = Integer.parseInt(line[2]); // ·ëID
-					System.out.println(roomid);
-					String roomUser = "";
-					int index = 0;
-					for (int i = 0; i < roomtotalList.size(); i++) { //ÀüÃ¼ ¹æ °¹¼ö¸¸Å­ ¹İº¹
-						System.out.println("Room ID L:" + roomtotalList.get(i).getrID());
-						if (roomtotalList.get(i).getrID() == roomid) { //¹æ ID°¡ °°À» °æ¿ì
-							int c = roomtotalList.get(i).getUserCount(); //ÇöÀç Á¢¼ÓÀÚ ¼ö¸¦ ¹Ş¾Æ¿À°í
-							roomtotalList.get(i).setUserCount(c + 1); //+1
-							roomUser = roomtotalList.get(i).getRoomInUserList();
-							roomtotalList.get(i).setRoomInUserList(roomUser + "%" +user.getIdName()); //Á¢¼ÓÀÚ ¸®½ºÆ®¿¡ ÇöÀç Á¢¼ÓÀÚ¸¦ Ãß°¡ÇÑ´Ù.
-							priRoom = roomtotalList.get(i);
-							index = i;
-							System.out.println(priRoom.toString());
-						}
-					}
-					
-					System.out.println(thisName); 
-					System.out.println("Index : " + index);
-					System.out.println(connUserList.size());
-					printW.println(Protocol.ENTERROOM_OK1  + "|" +  line[1] + "|" +line[2]);
-					printW.flush();
-					String roomMember[] = roomtotalList.get(index).getRoomInUserList().split("%"); //¹æ ÀÎ¿ø arr
-					System.out.println(roomMember.length);
-					for (int i = 0; i < roomMember.length; i++) {
-						for(int j = 0 ; j < connUserList.size() ; j++) { 
-							if(connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[i])) {
-								connUserList.get(j).printW.println(Protocol.ENTERROOM_USERLISTSEND + "|"
-										+ roomtotalList.get(index).getRoomInUserList() + "|" + user.getIdName() + "´ÔÀÌ ÀÔÀåÇÏ¼Ì½À´Ï´Ù." + "|" + line[2]); //´ëÈ­ »ó´ë¹æ¿¡°Ô ÇöÀç »ç¿ëÀÚ°¡ ÀÔÀåÇßÀ½À» ¾Ë¸²
-								connUserList.get(j).printW.flush();
-							}
-						}
-					}
-				} 
-				else if (line[0].compareTo(Protocol.EXITCHATTINGROOM) == 0) // ¹æ ³ª°¡±â
-				{
+                    int roomid = Integer.parseInt(line[2]); // ë°© ID
+                    System.out.println(roomid);
+                    String roomUser = "";
+                    int index = 0;
+                    for (int i = 0; i < roomtotalList.size(); i++) { //ì „ì±„ ë°© ê°œìˆ˜ ë§Œí¼
+                        System.out.println("Room ID L:" + roomtotalList.get(i).getrID());
+                        if (roomtotalList.get(i).getrID() == roomid) { //ë°© IDê°€ ê°™ì„ ê²½ìš°
+                            int c = roomtotalList.get(i).getUserCount(); //í˜„ì¬ ì ‘ì†ì ìˆ˜ë¥¼ ë°›ì•„ì˜¤ê³ 
+                            roomtotalList.get(i).setUserCount(c + 1); //+1
+                            roomUser = roomtotalList.get(i).getRoomInUserList();
+                            roomtotalList.get(i).setRoomInUserList(roomUser + "%" + user.getIdName()); //ì ‘ì†ì ë¦¬ìŠ¤íŠ¸ì— í˜„ì¬ ì ‘ì†ìë¥¼ ì¶”ê°€
+                            priRoom = roomtotalList.get(i);
+                            index = i;
+                            System.out.println(priRoom.toString());
+                        }
+                    }
 
-					int roomIndex = 0;
-					boolean con = true;
+                    System.out.println(thisName);
+                    System.out.println("Index : " + index);
+                    System.out.println(connUserList.size());
+                    printW.println(Protocol.ENTERROOM_OK1 + "|" + line[1] + "|" + line[2]);
+                    printW.flush();
+                    String roomMember[] = roomtotalList.get(index).getRoomInUserList().split("%"); //ë°© ì¸ì›
+                    System.out.println(roomMember.length);
+                    for (int i = 0; i < roomMember.length; i++) {
+                        for (int j = 0; j < connUserList.size(); j++) {
+                            if (connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[i])) {
+                                connUserList.get(j).printW.println(Protocol.ENTERROOM_USERLISTSEND + "|"
+                                        + roomtotalList.get(index).getRoomInUserList() + "|" + user.getIdName() + "ë‹˜ì´ ì…ì¥í•˜ì…¨ìŠµë‹ˆë‹¤." + "|" + line[2]); //ï¿½ï¿½È­ ï¿½ï¿½ï¿½æ¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¸ï¿½
+                                connUserList.get(j).printW.flush();
+                            }
+                        }
+                    }
+                } else if (line[0].compareTo(Protocol.EXITCHATTINGROOM) == 0) // ë°© ë‚˜ê°€ê¸°
+                {
 
-					for (int i = 0; i < roomtotalList.size(); i++) {
-						if (roomtotalList.get(i).getrID() == Integer.parseInt(line[2])) {
+                    int roomIndex = 0;
+                    boolean con = true;
 
-							if (roomtotalList.get(i).getUserCount() == 2) // ³ª¿Ã‹š ÀÚ±â°¡ ¸¶Áö¸·ÀÏ ¶§.
-							{
-								roomIndex = i;
-								String roomUser = roomtotalList.get(roomIndex).getRoomInUserList();
-								String roomMember[] = roomUser.split("%");
-								for (int k = 0; k < roomtotalList.get(roomIndex).getUserCount(); k++) {
-									for(int j = 0 ; j < connUserList.size() ; j++) {
-										if(connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[k])) {
-											connUserList.get(j).printW.println(Protocol.EXIT_CHATTINGROOM + "|" + roomtotalList.get(i).getrID());
-											connUserList.get(j).printW.flush(); //¹æ ÀüÃ¼ ¸®½ºÆ® Áß¿¡ ÇöÀç ¹æÀÌ ¸î¹øÂ°¿¡ À§Ä¡ÇÏ´ÂÁö °Ë»ö
-										}
-									}
-								}
-								
-								System.out.println("³ª¿Ã¶§ ³»°¡ ¸¶Áö¸·ÀÏ¶§");
-								Room tempRoom = roomtotalList.get(i); 
-								roomtotalList.remove(tempRoom); //ÇöÀç¹æÀ» remove
-								tempRoom = new Room();
-								con = false;
-								
+                    for (int i = 0; i < roomtotalList.size(); i++) {
+                        if (roomtotalList.get(i).getrID() == Integer.parseInt(line[2])) {
 
-							} else { // ÃÖ¼Ò 2¸íÀÏ ¶§
-								System.out.println("³ª¿Ã¶§ ³»°¡ ¸¶Áö¸·¾Æ´Ò¶§");
-								Room tempRoom = roomtotalList.get(i); 
-								roomtotalList.get(i).setUserCount(roomtotalList.get(i).getUserCount() - 1);; // ¹æ¿¡ À¯Àú »©±â
-								tempRoom = new Room();// ÇöÀç ¹æ ºñ¿ì±â
-								roomIndex = i;
-							}
+                            if (roomtotalList.get(i).getUserCount() == 2) // ë‚˜ì˜¤ëŠ” ì‚¬ëŒì´ ë§ˆì§€ë§‰ì¼ ê²½ìš°
+                            {
+                                roomIndex = i;
+                                String roomUser = roomtotalList.get(roomIndex).getRoomInUserList();
+                                String roomMember[] = roomUser.split("%");
+                                for (int k = 0; k < roomtotalList.get(roomIndex).getUserCount(); k++) {
+                                    for (int j = 0; j < connUserList.size(); j++) {
+                                        if (connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[k])) {
+                                            connUserList.get(j).printW.println(Protocol.EXIT_CHATTINGROOM + "|" + roomtotalList.get(i).getrID());
+                                            connUserList.get(j).printW.flush(); //ë°© ì „ì²´ ë¦¬ìŠ¤íŠ¸ ì¤‘ì— í˜„ì¬ ë°©ì´ ëª‡ë²ˆì§¸ ìœ„ì¹˜í•˜ëŠ”ì§€ ê²€ìƒ‰
+                                        }
+                                    }
+                                }
 
-						}
-						
-						if (con) // ³²¾ÆÀÖ´Â¹æ¿¡ ÃÖ¼Ò 2¸íÀÌ»óÀÏ¶§
-						{
-							String roomUser = roomtotalList.get(roomIndex).getRoomInUserList(); //¹æÀÇ ÃÑ ÀÎ¿øÀ» ¹Ş¾Æ¿È
-							String roomMember[] = roomUser.split("%");
-							System.out.println("Æ¯Á¤¹æ¿¡ »ç¶÷¼ö : " + roomtotalList.get(roomIndex).getUserCount());
-							System.out.println(roomUser);
-							for (int k = 0; k < roomtotalList.get(roomIndex).getUserCount(); k++) { //¹æÀÇ ¸ğµç ÀÎ¿ø¿¡°Ô ´©±º°¡ ÅğÀåÇßÀ½À» ¾Ë¸²
-								for(int j = 0 ; j < connUserList.size() ; j++) {
-									if(connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[k])) {
-										connUserList.get(j).printW.println(Protocol.ENTERROOM_USERLISTSEND + "|"
-												+ roomUser + "|" + user.getIdName() + "´ÔÀÌ ÅğÀåÇÏ¼Ì½À´Ï´Ù." + "|" + roomtotalList.get(i).getrID());
-										connUserList.get(j).printW.flush();
-									}
-								}
-							}
-						}
+                                System.out.println("ë°©ì„ ë‚˜ê°ˆ ì‹œ ë§ˆì§€ë§‰ìœ¼ë¡œ ë‚˜ì˜¬ ê²½ìš°");
+                                Room tempRoom = roomtotalList.get(i);
+                                roomtotalList.remove(tempRoom); //í˜„ì¬ ë°© ì œê±°
+                                tempRoom = new Room();
+                                con = false;
 
-						String roomListMessage = "";
 
-						System.out.println(roomListMessage);
-					}
-					
-					
-					
-				} else if (line[0].compareTo(Protocol.CHATTINGSENDMESSAGE) == 0) // Ã¤ÆÃ¹æ¿¡¼­ ¸Ş¼¼Áö º¸³»±â
-				{
-					int index = 0;
-					for(int i = 0 ; i < roomtotalList.size() ; i++) {
-						if(roomtotalList.get(i).getrID() == Integer.parseInt(line[2])){
-							index = i; //ÇöÀç ¹æ ¼ø¼­¸¦ ¹Ş¾Æ¿È
-						}
-					}
-					System.out.println("RoomNumber : " + line[2]);
-					System.out.println("Index =" + index);
-					String roomUser = roomtotalList.get(index).getRoomInUserList(); //ÇöÀç ¹æÀÇ Á¢¼ÓÀÚ ¸®½ºÆ®¸¦ ¹Ş¾Æ¿È
-					String roomMember[] = roomUser.split("%");
-					for (int i = 0; i < roomMember.length; i++) {
-						for(int j = 0 ; j < connUserList.size() ; j++) {
-							if(connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[i])) { //¹æ Á¢¼ÓÀÚµé¿¡°Ô ¸Ş¼¼Áö¸¦ Àü¼ÛÇÔ
-								connUserList.get(j).printW.println(Protocol.CHATTINGSENDMESSAGE_OK + 
-										"|" + user.getIdName() + "|" + line[1] + "|" +roomtotalList.get(index).getrID()); 
-								connUserList.get(j).printW.flush();
-							}
-						}
-					}
+                            } else { // ìµœì†Œ 2ëª… ì´ìƒì¼ë•Œ
+                                System.out.println("ë°©ì„ ë‚˜ê°ˆ ì‹œ ë§ˆì§€ë§‰ì´ ì•„ë‹ ê²½ìš°");
+                                Room tempRoom = roomtotalList.get(i);
+                                roomtotalList.get(i).setUserCount(roomtotalList.get(i).getUserCount() - 1); // ë°©ì—ì„œ ìœ ì € ì œê±°
+                                tempRoom = new Room();// í˜„ì¬ ë°© ë¹„ìš°ê¸°
+                                roomIndex = i;
+                            }
 
-				}
-				else if(line[0].compareTo(Protocol.CHANGE_TODAY_LINE) == 0) { //¿À´ÃÀÇ ÇÑ¸¶µğ º¯°æ
-					String sql2="UPDATE usercontent SET today_line= '" + line[1]  + "' where id = '" + user.getIdName() + "'";
-                    pstmt=conn.prepareStatement(sql2);
-                    pstmt.executeUpdate(); 
-                    String sql1="UPDATE friendList SET friendtoday_line= '" + line[1] + " 'where friendId= '" + user.getIdName() + "'";
-                    pstmt=conn.prepareStatement(sql1);
-                    pstmt.executeUpdate(); //db¿¡ º¯°æµÈ ¹®ÀåÀ» ÀúÀå
+                        }
 
-                    for (int i = 0; i < connUserList.size(); i++) { //ÇöÀç Á¢¼ÓÀÚ ¸®½ºÆ®¿¡°Ô ¿À´ÃÀÇ ÇÑ¸¶µğ°¡ ¾÷µ¥ÀÌÆ® µÇ¾ú´Ù°í Àü¼Û
-						connUserList.get(i).printW.println(Protocol.UPDATED);
-						connUserList.get(i).printW.flush();
-					}
+                        if (con) // ë‚¨ì•„ ìˆëŠ” ë°©ì— ìµœì†Œ 2ëª… ì´ìƒì¼ë•Œ
+                        {
+                            String roomUser = roomtotalList.get(roomIndex).getRoomInUserList(); //ë°©ì˜ ì´ ì¸ì›ì„ ë°›ì•„ì˜´
+                            String roomMember[] = roomUser.split("%");
+                            System.out.println("íŠ¹ì • ë°©ì˜ ì‚¬ëŒ ìˆ˜ : " + roomtotalList.get(roomIndex).getUserCount());
+                            System.out.println(roomUser);
+                            for (int k = 0; k < roomtotalList.get(roomIndex).getUserCount(); k++) { //ë°©ì˜ ëª¨ë“  ì¸ì›ì—ê²Œ ëˆ„êµ°ê°€ í‡´ì¥í–ˆìŒì„ ì•Œë¦¼
+                                for (int j = 0; j < connUserList.size(); j++) {
+                                    if (connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[k])) {
+                                        connUserList.get(j).printW.println(Protocol.ENTERROOM_USERLISTSEND + "|"
+                                                + roomUser + "|" + user.getIdName() + "ë‹˜ì´ í‡´ì¥í•˜ì…¨ìŠµë‹ˆë‹¤." + "|" + roomtotalList.get(i).getrID());
+                                        connUserList.get(j).printW.flush();
+                                    }
+                                }
+                            }
+                        }
+
+                        String roomListMessage = "";
+
+                        System.out.println(roomListMessage);
+                    }
+
+
+                } else if (line[0].compareTo(Protocol.CHATTINGSENDMESSAGE) == 0) // ì±„íŒ…ë°©ì—ì„œ ë©”ì„¸ì§€ ë³´ë‚´ê¸°
+                {
+                    int index = 0;
+                    for (int i = 0; i < roomtotalList.size(); i++) {
+                        if (roomtotalList.get(i).getrID() == Integer.parseInt(line[2])) {
+                            index = i; //í˜„ì¬ ë°© ìˆœì„œë¥¼ ë°›ì•„ì˜´
+                        }
+                    }
+                    System.out.println("RoomNumber : " + line[2]);
+                    System.out.println("Index =" + index);
+                    String roomUser = roomtotalList.get(index).getRoomInUserList(); //í˜„ì¬ ë°©ì˜ ì ‘ì†ì ë¦¬ìŠ¤íŠ¸ë¥¼ ë°›ì•„ì˜´
+                    String roomMember[] = roomUser.split("%");
+                    for (int i = 0; i < roomMember.length; i++) {
+                        for (int j = 0; j < connUserList.size(); j++) {
+                            if (connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[i])) { //ë°© ì ‘ì†ìë“¤ì—ê²Œ ë©”ì„¸ì§€ ì „ì†¡
+                                connUserList.get(j).printW.println(Protocol.CHATTINGSENDMESSAGE_OK +
+                                        "|" + user.getIdName() + "|" + line[1] + "|" + roomtotalList.get(index).getrID());
+                                connUserList.get(j).printW.flush();
+                            }
+                        }
+                    }
+
+                } else if (line[0].compareTo(Protocol.CHANGE_TODAY_LINE) == 0) { //ì˜¤ëŠ˜ì˜ í•œë§ˆë”” ë³€ê²½
+                    String sql2 = "UPDATE usercontent SET today_line= '" + line[1] + "' where id = '" + user.getIdName() + "'";
+                    pstmt = conn.prepareStatement(sql2);
+                    pstmt.executeUpdate();
+                    String sql1 = "UPDATE friendList SET friendtoday_line= '" + line[1] + " 'where friendId= '" + user.getIdName() + "'";
+                    pstmt = conn.prepareStatement(sql1);
+                    pstmt.executeUpdate(); //DBì— ë³€ê²½ëœ ë¬¸ì¥ì„ ì €ì¥
+
+                    for (int i = 0; i < connUserList.size(); i++) { //í˜„ì¬ ì ‘ì†ì ë¦¬ìŠ¤íŠ¸ì—ê²Œ ì˜¤ëŠ˜ì˜ í•œë§ˆë””ê°€ ì—…ë°ì´íŠ¸ ë˜ì—ˆë‹¤ê³  ì „ì†¡
+                        connUserList.get(i).printW.println(Protocol.UPDATED);
+                        connUserList.get(i).printW.flush();
+                    }
                     printW.println(Protocol.UPDATE_ME + "|" + line[1]);
                     printW.flush();
-				}
-				else if(line[0].compareTo(Protocol.UPDATE_PLZ) == 0) { //¾÷µ¥ÀÌÆ®°¡ ÀÖÀ½À» ¹ŞÀ¸¸é Á¤º¸ ¿äÃ»
-					  	String userline = "";
-	                    String sql= "select friendId, friendName, friendNickname, friendtoday_line, friendState from friendList where id = '" + user.getIdName()
-						+ "'";
-	                    pstmt = conn.prepareStatement(sql);
-	                    ResultSet rs1 = pstmt.executeQuery(sql);
-	                   
-	                    while(rs1.next()) { //¹Ş¾Æ¿Â Á¤º¸·Î Ä£±¸¸ñ·Ï ÀçÀÛ¼º
-	                    	String s = "offline";
-	                 		if(rs1.getString("friendState").equalsIgnoreCase("1")) {
-	                 			s = "online";
-	                 		}
-	                    	userline += (rs1.getString("friendId") + "&" + rs1.getString("friendName") + "&" 
-	                    			+ rs1.getString("friendNickname") + "&" + rs1.getString("friendtoday_line") + "&" + s + ":");
-	                    }
-	                    if(userline.length() == 0) {
-	                    	userline = "null&null&null&null&null";
-	                    }
-	                    System.out.println(Protocol.UPDATE_CONFIRM + "|" + userline);
-	                    printW.println(Protocol.UPDATE_CONFIRM + "|" + userline);
-	                    printW.flush();
-				}
-				else if(line[0].compareTo(Protocol.REQUEST_FRIEND_LIST) == 0) { //Ä£±¸Ãß°¡ Ã¢ ¶ç¿ï ½Ã
-					String userline = "";
-					if(line[1].equalsIgnoreCase("ALL!@#")) {
-	                    String sql= "select id, name, nickName, state from usercontent";
-	                    pstmt = conn.prepareStatement(sql);
-	                    ResultSet rs1 = pstmt.executeQuery(sql);
-	                    while(rs1.next()) { //ÇöÀç DB¿¡ ÀÖ´Â ¸ğµç »ç¶÷µéÀÇ Á¤º¸¸¦ ¹Ş¾Æ¿À±â
-	                    	if(rs1.getString("id").equalsIgnoreCase(user.getIdName())) {
-	                    	}
-	                    	else {
-	                    		String s = "offline"; //Ä£±¸ ¸ñ·Ï¿¡ »óÅÂ Ãß°¡
-	                    		if(rs1.getString("state").equalsIgnoreCase("1")) {
-	                    			s = "online";
-	                    		}
-	                    		userline += (rs1.getString("id") + "&" + rs1.getString("name") + "&" + 
-		                    			rs1.getString("nickName") + "&" + s + ":");
-	                    	}
-	                    	
-	                    }  
-					}
-					else { //³»°¡ ¼±ÅÃÇÑ »ç¶÷ÀÇ Á¤º¸¸¦ ¹Ş¾Æ¿À±â
-	                    String sql= "select id, name, nickName from usercontent where id like'%" + line[1] + "%'";
-	                    pstmt = conn.prepareStatement(sql);
-	                    ResultSet rs1 = pstmt.executeQuery(sql);
-	                    while(rs1.next()) {
-	                    	if(rs1.getString("id").equalsIgnoreCase(user.getIdName())) {
-	                    	}
-	                    	else {
-	                    		String s = "offline"; //Ä£±¸ ¸ñ·Ï¿¡ »óÅÂ Ãß°¡
-	                    		if(rs1.getString("state").equalsIgnoreCase("1")) {
-	                    			s = "online";
-	                    		}
-	                    		userline += (rs1.getString("id") + "&" + rs1.getString("name") + "&" + 
-		                    			rs1.getString("nickName") + "&" + s + ":");
-	                    	}
-	                    	
-	                    }  
-					}
-					if(userline.length() == 0) {
-                    	userline = "null&null&null&null";
+                } else if (line[0].compareTo(Protocol.UPDATE_PLZ) == 0) { //ì—…ë°ì´íŠ¸ê°€ ìˆìŒì„ ë°›ìœ¼ë©´ ì •ë³´ ìš”ì²­
+                    String userline = "";
+                    String sql = "select friendId, friendName, friendNickname, friendtoday_line, friendState from friendList where id = '" + user.getIdName()
+                            + "'";
+                    pstmt = conn.prepareStatement(sql);
+                    ResultSet rs1 = pstmt.executeQuery(sql);
+
+                    while (rs1.next()) { //ë°›ì•„ì˜¨ ì •ë³´ë¡œ ì¹œêµ¬ ëª©ë¡ ì¬ì‘ì„±
+                        String s = "offline";
+                        if (rs1.getString("friendState").equalsIgnoreCase("1")) {
+                            s = "online";
+                        }
+                        userline += (rs1.getString("friendId") + "&" + rs1.getString("friendName") + "&"
+                                + rs1.getString("friendNickname") + "&" + rs1.getString("friendtoday_line") + "&" + s + ":");
                     }
-					printW.println(Protocol.REQUEST_FRIEND_LIST_CONFIRM + "|" + userline);
-					printW.flush();
-				}
-				else if(line[0].compareTo(Protocol.REQUEST_FRIEND_ADD) == 0) {//Ä£±¸ Ãß°¡ÇÒ À¯Àú Á¤º¸ Àü¼Û
-					String text[] = line[1].split(" ");
-					String sql= "select id, name, nickName, today_line, state from usercontent where id ='" + text[0] + "'";//id¿Í ¶È°°Àº »ç¿ëÀÚ Á¤º¸ ¹Ş¾Æ¿È	
-			
+                    if (userline.length() == 0) {
+                        userline = "null&null&null&null&null";
+                    }
+                    System.out.println(Protocol.UPDATE_CONFIRM + "|" + userline);
+                    printW.println(Protocol.UPDATE_CONFIRM + "|" + userline);
+                    printW.flush();
+                } else if (line[0].compareTo(Protocol.REQUEST_FRIEND_LIST) == 0) { //ì¹œêµ¬ ì¶”ê°€ ì°½ ë„ìš°ëŠ” ê²½ìš°
+                    String userline = "";
+                    if (line[1].equalsIgnoreCase("ALL!@#")) { //ì „ì²´ ì‚¬ìš©ìì˜ ì •ë³´ ìš”ì²­í•  ê²½ìš°
+                        String sql = "select id, name, nickName, state from usercontent";
+                        pstmt = conn.prepareStatement(sql);
+                        ResultSet rs1 = pstmt.executeQuery(sql);
+                        while (rs1.next()) { //í˜„ì¬ DBì— ìˆëŠ” ëª¨ë“  ì‚¬ëŒì˜ ì •ë³´ë¥¼ ë°›ì•„ì˜¤ê¸°
+                            if (rs1.getString("id").equalsIgnoreCase(user.getIdName())) {
+                            } else {
+                                String s = "offline"; //ì¹œêµ¬ ëª©ë¡ì— ìƒíƒœ ì¶”ê°€
+                                if (rs1.getString("state").equalsIgnoreCase("1")) {
+                                    s = "online";
+                                }
+                                userline += (rs1.getString("id") + "&" + rs1.getString("name") + "&" +
+                                        rs1.getString("nickName") + "&" + s + ":");
+                            }
+
+                        }
+                    } else { //ë‚´ê°€ ì„ íƒí•œ ì‚¬ëŒì˜ ì •ë³´ë¥¼ ë°›ì•„ì˜¤ê¸°
+                        String sql = "select id, name, nickName from usercontent where id like'%" + line[1] + "%'";
+                        pstmt = conn.prepareStatement(sql);
+                        ResultSet rs1 = pstmt.executeQuery(sql);
+                        while (rs1.next()) {
+                            if (rs1.getString("id").equalsIgnoreCase(user.getIdName())) {
+                            } else {
+                                String s = "offline"; //ì¹œêµ¬ ëª©ë¡ì— ìƒíƒœ ì¶”ê°€
+                                if (rs1.getString("state").equalsIgnoreCase("1")) {
+                                    s = "online";
+                                }
+                                userline += (rs1.getString("id") + "&" + rs1.getString("name") + "&" +
+                                        rs1.getString("nickName") + "&" + s + ":");
+                            }
+
+                        }
+                    }
+                    if (userline.length() == 0) {
+                        userline = "null&null&null&null";
+                    }
+                    printW.println(Protocol.REQUEST_FRIEND_LIST_CONFIRM + "|" + userline);
+                    printW.flush();
+                } else if (line[0].compareTo(Protocol.REQUEST_FRIEND_ADD) == 0) {//ì¹œêµ¬ ì¶”ê°€í•  ìœ ì € ì •ë³´ ì „ì†¡
+                    String text[] = line[1].split(" ");
+                    String sql = "select id, name, nickName, today_line, state from usercontent where id ='" + text[0] + "'";//ë™ì¼ í•œ IDì˜ ì‚¬ìš©ì ì •ë³´ ê°€ì ¸ì˜´
+
                     pstmt = conn.prepareStatement(sql);
                     ResultSet rs = pstmt.executeQuery(sql);
                     String sql1 = "";
-                    
-                   
-                    while(rs.next()) {//¹Ş¾Æ¿Â »ç¿ëÀÚ Á¤º¸¸¦ friendlist DB table¿¡ ÀúÀå
-                    	sql1 = "Insert into friendList values('" + user.getIdName() + "','" + rs.getString("id") + "','" + rs.getString("name")
-    					+ "','" + rs.getString("nickName") + "','" + rs.getString("today_line") + "','" + rs.getString("state") + "')";
+
+
+                    while (rs.next()) {//ë°›ì•„ì˜¨ ì‚¬ìš©ì ì •ë³´ë¥¼ ì¹œêµ¬ë¦¬ìŠ¤íŠ¸ DBì— ì €ì¥
+                        sql1 = "Insert into friendList values('" + user.getIdName() + "','" + rs.getString("id") + "','" + rs.getString("name")
+                                + "','" + rs.getString("nickName") + "','" + rs.getString("today_line") + "','" + rs.getString("state") + "')";
                     }
-	                pstmt=conn.prepareStatement(sql1);
-	                pstmt.executeUpdate();
-	                
-	                for (int i = 0; i < connUserList.size(); i++) { //Á¢¼ÓÁßÀÎ À¯Àúµé ¸ğµÎ¿¡°Ô 
-						connUserList.get(i).printW.println(Protocol.UPDATED); //¾÷µ¥ÀÌÆ® »çÇ×ÀÌ ÀÖÀ½À» ¾Ë¸²
-						connUserList.get(i).printW.flush();
-					}
+                    pstmt = conn.prepareStatement(sql1);
+                    pstmt.executeUpdate();
+
+                    for (int i = 0; i < connUserList.size(); i++) { //ì ‘ì†ì¤‘ì¸ ìœ ì €ë“¤ ëª¨ë‘ì—ê²Œ
+                        connUserList.get(i).printW.println(Protocol.UPDATED); //ë³€ê²½ì‚¬í•­ ìˆìŒì„ ì•Œë¦¼
+                        connUserList.get(i).printW.flush();
+                    }
                     printW.println(Protocol.UPDATED + "|" + line[1]);
                     printW.flush();
-				}
-				else if(line[0].compareTo(Protocol.REQUEST_FRIEND_DELETE) == 0) {//Ä£±¸ »èÁ¦
-					String text[] = line[1].split("/");
-					String sql= "delete from friendlist where id='"+ user.getIdName()+"' and friendId='"+text[0]+ "'"; //Ä£±¸ »èÁ¦ Äõ¸®¹®
-					
+                } else if (line[0].compareTo(Protocol.REQUEST_FRIEND_DELETE) == 0) {//ì¹œêµ¬ ì‚­ì œ
+                    String text[] = line[1].split("/");
+                    String sql = "delete from friendlist where id='" + user.getIdName() + "' and friendId='" + text[0] + "'"; //ì¹œêµ¬ ì‚­ì œ ì¿¼ë¦¬ë¬¸
+
                     pstmt = conn.prepareStatement(sql);
                     pstmt.executeUpdate();
-                    
-                   System.out.println(text[1]+" is deleted");
-                   String sql2= "select id, name, nickName, age, email, today_line , state from usercontent where id ='" + text[0] + "'";
-                   pstmt = conn.prepareStatement(sql2);
-                   ResultSet rs = pstmt.executeQuery(sql2);
-                   String id ="";
-                   String nickname = "";
-                   String name = "";
-                   String email = "";
-                   String age = "";
-                   String today_line = "";
-                   int state = 0;
-					while (rs.next()) { //»èÁ¦µÈ Ä£±¸ÀÇ Á¤º¸¸¦ ¹Ş¾Æ¿Í ÀúÀå
-						id = (rs.getString("ID"));
-						nickname = (rs.getString("nickName"));
-						name = (rs.getString("NAME"));
-						email = (rs.getString("email"));
-						age = (rs.getString("AGE"));
-						today_line = (rs.getString("today_line"));
-						state = (rs.getInt("state"));
-					}
-					
-					 printW.println(Protocol.CONFIRM_FRIEND_DELETE + "|" + id + "&" + nickname + "&"
-							 + name + "&" + email + "&" + age + "&" + today_line + "&" + state); //Ä£±¸°¡ »èÁ¦µÇ¾úÀ½À» ¾Ë¸²
-	                 printW.flush();
-				}	
-				
-				else if(line[0].compareTo(Protocol.CHECK_FRIEND_INFO) == 0) { //Ä£±¸ Á¤º¸ ¹Ş¾Æ¿À±â
-					String text[] = line[1].split("/");
-					String sql= "select id, name, nickName, age, email, today_line , state from usercontent where id ='" + text[0] + "'"; //Ä£±¸ Á¤º¸ ¹Ş¾Æ¿À´Â Äõ¸®¹®
-                    pstmt = conn.prepareStatement(sql);
-                    ResultSet rs = pstmt.executeQuery(sql);
-                    String id ="";
+
+                    System.out.println(text[1] + " is deleted");
+                    String sql2 = "select id, name, nickName, age, email, today_line , state from usercontent where id ='" + text[0] + "'";
+                    pstmt = conn.prepareStatement(sql2);
+                    ResultSet rs = pstmt.executeQuery(sql2);
+                    String id = "";
                     String nickname = "";
                     String name = "";
                     String email = "";
                     String age = "";
                     String today_line = "";
                     int state = 0;
-					while (rs.next()) { //Ä£±¸ÀÇ Á¤º¸¸¦ ¹Ş¾Æ¿Í ÀúÀå
-						id = (rs.getString("ID"));
-						nickname = (rs.getString("nickName"));
-						name = (rs.getString("NAME"));
-						email = (rs.getString("email"));
-						age = (rs.getString("AGE"));
-						today_line = (rs.getString("today_line"));
-						state = (rs.getInt("state"));
-					}
-					 printW.println(Protocol.CONFIRM_FRIEND_INFO + "|" + id + "&" + nickname + "&"
-							 + name + "&" + email + "&" + age + "&" + today_line + "&" + state); //Ä£±¸ÀÇ Á¤º¸¸¦ À¯Àú¿¡°Ô Ãâ·ÂÇÏ±â À§ÇØ Àü´Ş
-	                 printW.flush();
-				}
-				else if(line[0].compareTo(Protocol.REQUEST_GROUPCHAT_LIST) == 0) { //±×·ìÃ¤ÆÃÀ» ¿­±âÀ§ÇØ Ä£±¸¸ñ·Ï ¿äÃ»
-					String userline = "";
-                    String sql= "select friendId, friendName, friendNickname, friendtoday_line, friendState from friendList where id = '" + user.getIdName()
-					+ "'"; //ÇöÀç »ç¿ëÀÚÀÇ Ä£±¸ ¸®½ºÆ®µéÀ» ¹Ş¾Æ¿È
+                    while (rs.next()) { //ì‚­ì œëœ ì¹œêµ¬ì˜ ì •ë³´ë¥¼ ë°›ì•„ì™€ ì €ì¥
+                        id = (rs.getString("ID"));
+                        nickname = (rs.getString("nickName"));
+                        name = (rs.getString("NAME"));
+                        email = (rs.getString("email"));
+                        age = (rs.getString("AGE"));
+                        today_line = (rs.getString("today_line"));
+                        state = (rs.getInt("state"));
+                    }
+
+                    printW.println(Protocol.CONFIRM_FRIEND_DELETE + "|" + id + "&" + nickname + "&"
+                            + name + "&" + email + "&" + age + "&" + today_line + "&" + state); //ì¹œêµ¬ê°€ ì‚­ì œë˜ì—ˆìŒì„ ì•Œë¦¼
+                    printW.flush();
+                } else if (line[0].compareTo(Protocol.CHECK_FRIEND_INFO) == 0) { //ì¹œêµ¬ ì •ë³´ ë°›ì•„ì˜¤ê¸°
+                    String text[] = line[1].split("/");
+                    String sql = "select id, name, nickName, age, email, today_line , state from usercontent where id ='" + text[0] + "'"; //ì¹œêµ¬ ì •ë³´ ë°›ì•„ì˜¤ê¸°
+                    pstmt = conn.prepareStatement(sql);
+                    ResultSet rs = pstmt.executeQuery(sql);
+                    String id = "";
+                    String nickname = "";
+                    String name = "";
+                    String email = "";
+                    String age = "";
+                    String today_line = "";
+                    int state = 0;
+                    while (rs.next()) { //ì¹œêµ¬ì˜ ì •ë³´ë¥¼ ë°›ì•„ì˜¤ ã…ì €ì¥
+                        id = (rs.getString("ID"));
+                        nickname = (rs.getString("nickName"));
+                        name = (rs.getString("NAME"));
+                        email = (rs.getString("email"));
+                        age = (rs.getString("AGE"));
+                        today_line = (rs.getString("today_line"));
+                        state = (rs.getInt("state"));
+                    }
+                    printW.println(Protocol.CONFIRM_FRIEND_INFO + "|" + id + "&" + nickname + "&"
+                            + name + "&" + email + "&" + age + "&" + today_line + "&" + state); //ì¹œêµ¬ì˜ ì •ë³´ë¥¼ ìœ ì €ì—ê²Œ ì¶œë ¥í•˜ê¸° ìœ„í•´ ì „ë‹¬
+                    printW.flush();
+                } else if (line[0].compareTo(Protocol.REQUEST_GROUPCHAT_LIST) == 0) { //ê·¸ë£¹ ì±„íŒ…ì„ ì—´ê¸° ìœ„í•´ ì¹œêµ¬ ëª©ë¡ ìš”ì²­
+                    String userline = "";
+                    String sql = "select friendId, friendName, friendNickname, friendtoday_line, friendState from friendList where id = '" + user.getIdName()
+                            + "'"; //í˜„ì¬ ì‚¬ìš©ìì˜ ì¹œêµ¬ ë¦¬ìŠ¤íŠ¸ë“¤ì„ ë°›ì•„ì˜´
                     pstmt = conn.prepareStatement(sql);
                     ResultSet rs1 = pstmt.executeQuery(sql);
-                   
-                    while(rs1.next()) { //Ä£±¸ ¸ñ·Ï »ı¼º
-                    	String s = "offline";
-                 		if(rs1.getString("friendState").equalsIgnoreCase("1")) {
-                 			s = "online";
-                 		}
-                    	userline += (rs1.getString("friendId") + "&" + rs1.getString("friendName") + "&" 
-                    			+ rs1.getString("friendNickname") + "&" + rs1.getString("friendtoday_line") + "&" + s + ":");
+
+                    while (rs1.next()) { //ì¹œêµ¬ ëª©ë¡ ìƒì„±
+                        String s = "offline";
+                        if (rs1.getString("friendState").equalsIgnoreCase("1")) {
+                            s = "online";
+                        }
+                        userline += (rs1.getString("friendId") + "&" + rs1.getString("friendName") + "&"
+                                + rs1.getString("friendNickname") + "&" + rs1.getString("friendtoday_line") + "&" + s + ":");
                     }
-                    if(userline.length() == 0) {
-                    	userline = "null&null&null&null&null";
+                    if (userline.length() == 0) {
+                        userline = "null&null&null&null&null";
                     }
                     System.out.println(Protocol.GROUPCHAT_LIST + "|" + userline);
-                    printW.println(Protocol.GROUPCHAT_LIST + "|" + userline); //Ä£±¸ ¸ñ·Ï Ãâ·Â
+                    printW.println(Protocol.GROUPCHAT_LIST + "|" + userline); //ì¹œêµ¬ ëª©ë¡ ì¶œë ¥
                     printW.flush();
-				}
-				else if(line[0].compareTo(Protocol.JOINROOM_NO) == 0) { //Ã¤ÆÃ ÃÊ´ë °ÅÀı
-					int index = 0;
-					for (int i = 0; i < roomtotalList.size(); i++) {
-						if (roomtotalList.get(i).getrID() == Integer.parseInt(line[2])) {
-							index = i; //°ÅÀı´çÇÑ Ã¤ÆÃ¹æÀÇ ÀÎµ¦½º¸¦ ¾ò¾î¿È
-							System.out.println(priRoom.toString());
-						}
-					}
-					String roomMember[] = roomtotalList.get(index).getRoomInUserList().split("%");
-					System.out.println(roomMember.length);
-					for (int i = 0; i < roomMember.length; i++) {
-						for(int j = 0 ; j < connUserList.size() ; j++) {
-							if(connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[i])) {
-								connUserList.get(j).printW.println(Protocol.ENTERROOM_REJECT + "|" + user.getIdName() + "|" + line[2]); //Ã¤ÆÃ¹æ ¾È¿¡ ÀÖ´Â À¯Àúµé¿¡°Ô °ÅÀı´çÇßÀ½À» ¾Ë¸²
-								connUserList.get(j).printW.flush();
-							}
-						}
-					}
-				}
-			} // while		
-		} catch (Exception e){
-			e.printStackTrace();
-		}finally {
-			try {
-				br.close(); //Á¤»ó Á¾·á½Ã ÀÔ·Â ¹öÆÛ¸¦ ´İ´Â´Ù.
-			} catch (IOException e) {
-					// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			printW.close();
-			try {
-				socket.close(); //Á¤»ó Á¾·á½Ã ¼ÒÄÏÀ» ´İ´Â´Ù.
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				}
-		}
-		
-	}
+                } else if (line[0].compareTo(Protocol.JOINROOM_NO) == 0) { //ì±„íŒ… ì´ˆëŒ€ ê±°ì ˆ
+                    int index = 0;
+                    for (int i = 0; i < roomtotalList.size(); i++) {
+                        if (roomtotalList.get(i).getrID() == Integer.parseInt(line[2])) {
+                            index = i; //ê±°ì ˆë‹¹í•œ ì±„íŒ…ë°©ì˜ ì¸ë±ìŠ¤ë¥¼ ì–»ì–´ì˜´
+                            System.out.println(priRoom.toString());
+                        }
+                    }
+                    String roomMember[] = roomtotalList.get(index).getRoomInUserList().split("%");
+                    System.out.println(roomMember.length);
+                    for (int i = 0; i < roomMember.length; i++) {
+                        for (int j = 0; j < connUserList.size(); j++) {
+                            if (connUserList.get(j).user.getIdName().equalsIgnoreCase(roomMember[i])) {
+                                connUserList.get(j).printW.println(Protocol.ENTERROOM_REJECT + "|" + user.getIdName() + "|" + line[2]); //ì±„íŒ…ë°© ì•ˆì— ìˆëŠ” ìœ ì €ë“¤ì—ê²Œ ê±°ì ˆë‹¹í–ˆìŒì„ ì•Œë¦¼
+                                connUserList.get(j).printW.flush();
+                            }
+                        }
+                    }
+                }
+            } // while
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                chatReader.close(); //ì •ìƒ ì¢…ë£Œì‹œ ì…ë ¥ ë²„í¼ë¥¼ ë‹«ìŒ
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            printW.close();
+            try {
+                socket.close(); //ì •ìƒ ì¢…ë£Œì‹œ ì†Œì¼“ì„ ë‹«ìŒ
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
 }

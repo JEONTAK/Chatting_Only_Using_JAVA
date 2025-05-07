@@ -1,19 +1,12 @@
+
 package GUI;
 
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Toolkit;
-
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
+import javax.swing.*;
+import java.awt.*;
 
 public class newAccount extends JFrame{
-	
-	//GUI »ı¼º ºÎºĞ
+
+	//GUI ìƒì„± ë¶€ë¶„
 	JFrame frame = new JFrame("New Account");
 	JLabel newAccount = new JLabel("New Account");
 	JLabel id = new JLabel ("ID");
@@ -35,80 +28,80 @@ public class newAccount extends JFrame{
 	JButton emailokB = new JButton("Check Number");
 	JComboBox<String> emailC ,ageYearC, ageMonthC ,ageDayC;
 	//
-	
+
 	public newAccount(){
-		
-		//e-mail ¹Ú½º ºÎºĞ ÃÊ±âÈ­
-		String[] emailT = { "naver.com", "gmail.com" , "hanmail.net"}; 
+
+		//e-mail ë°•ìŠ¤ ë¶€ë¶„ ì´ˆê¸°í™”
+		String[] emailT = { "naver.com", "gmail.com" , "hanmail.net"};
 		//
-	
-		//ageYear ¹Ú½º ºÎºĞ ÃÊ±âÈ­
+
+		//ageYear ë°•ìŠ¤ ë¶€ë¶„ ì´ˆê¸°í™”
 		String[] ageYear = { "80", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90",
 				"91", "92", "93", "94", "95", "96", "97", "98", "99", "00", "01", "02", "03",
 				"04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16",
 				"17", "18", "19" , "20"};
 		//
-		
-		//ageMonth ¹Ú½º ºÎºĞ ÃÊ±âÈ­
+
+		//ageMonth ë°•ìŠ¤ ë¶€ë¶„ ì´ˆê¸°í™”
 		String[] ageMonth = { "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12" };
 		//
-		
-		//ageDay ¹Ú½º ºÎºĞ ÃÊ±âÈ­
+
+		//ageDay ë°•ìŠ¤ ë¶€ë¶„ ì´ˆê¸°í™”
 		String[] ageDay = { "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15",
 				"16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31" };
 		//
-		
-		
-		//frame ¼³Á¤
+
+
+		//frame ì„¤ì •
 		frame.setLayout(null);
 		frame.setSize(400,600);
 		Dimension res = Toolkit.getDefaultToolkit().getScreenSize();
 		frame.setLocation((res.width / 2) - 200 , (res.height / 2) - 200);
 		frame.setResizable(false);
 		//
-		
-		//GUI °´Ã¼ »ı¼º ºÎºĞ
+
+		//GUI ê°ì²´ ìƒì„± ë¶€ë¶„
 		emailC = new JComboBox<String>(emailT);
 		ageYearC = new JComboBox<String>(ageYear);
 		ageMonthC = new JComboBox<String>(ageMonth);
 		ageDayC = new JComboBox<String>(ageDay);
 		//
-		
-		//password field ¼³Á¤
+
+		//password field ì„¤ì •
 		pwField.setEchoChar('*');
 		pwField.setBounds(140,150,150,30);
 		//
-		
-		//label ¼³Á¤
+
+		//label ì„¤ì •
 		newAccount.setFont(new Font("STXinwei",Font.BOLD,40));
 		newAccount.setBounds(30,20,300,30);
 		newAccount.setHorizontalAlignment(newAccount.CENTER);
 		//
-		
-		//id ºÎºĞ ¼³Á¤
+
+		//id ë¶€ë¶„ ì„¤ì •
 		id.setFont(new Font("STXinwei",Font.BOLD,20));
 		id.setBounds(20,100,100,30);
 		idField.setBounds(140,100,150,30);
 		//
-		
-		//password ºÎºĞ ¼³Á¤
+
+		//password ë¶€ë¶„ ì„¤ì •
 		pw.setFont(new Font("STXinwei",Font.BOLD,20));
 		pw.setBounds(20,150,100,30);
 		//
-		
-		//´Ğ³×ÀÓ ºÎºĞ ¼³Á¤
+
+		//ë‹‰ë„¤ì„ ë¶€ë¶„ ì„¤ì •
 		nn.setFont(new Font("STXinwei",Font.BOLD,20));
 		nn.setBounds(20,200,100,30);
 		nnField.setBounds(140,200,150,30);
 		//
-		
-		//ÀÌ¸§ ºÎºĞ ¼³Á¤
+
+		//ì´ë¦„ ë¶€ë¶„ ì„¤ì •
 		name.setFont(new Font("STXinwei",Font.BOLD,20));
 		name.setBounds(20,250,100,30);
 		nameField.setBounds(140,250,150,30);
 		//
-		
-		//emailºÎºĞ ¼³Á¤
+
+		//emailë¶€ë¶„ ì„¤ì •
 		email.setFont(new Font("STXinwei",Font.BOLD,20));
 		email.setBounds(20,300,100,30);
 		emailField.setBounds(140,300,75,30);
@@ -118,31 +111,31 @@ public class newAccount extends JFrame{
 		emailadductionT.setBounds(140,350, 75, 30);
 		emailadductionL.setFont(new Font("STXinwei",Font.BOLD,15));
 		emailokB.setBounds(225,350,150,30);
-		
+
 		//
-		
-		//»ı³â¿ùÀÏ ºÎºĞ ¼³Á¤
+
+		//ìƒë…„ì›”ì¼ ë¶€ë¶„ ì„¤ì •
 		birth.setFont(new Font("STXinwei",Font.BOLD,20));
 		birth.setBounds(20,400,100,30);
 		//
-		
-		
-		//age ¹Ú½º ºÎºĞ ¼³Á¤
+
+
+		//age ë°•ìŠ¤ ë¶€ë¶„ ì„¤ì •
 		ageYearC.setBounds(140,400,50,30);
 		ageMonthC.setBounds(200,400,50,30);
 		ageDayC.setBounds(260,400,50,30);
 		//
-		
-		//create¹öÆ° ºÎºĞ ¼³Á¤
+
+		//createë²„íŠ¼ ë¶€ë¶„ ì„¤ì •
 		createOK.setBounds(300,450,80,30);
 		//
-		
-		//Áßº¹Ã¼Å© ¹öÆ° ¼³Á¤
+
+		//ì¤‘ë³µì²´í¬ ë²„íŠ¼ ì„¤ì •
 		isDuplicate.setBounds(300,100,80,30);
 		//
-		
-		
-		//frame¿¡ component Ãß°¡
+
+
+		//frameì— component ì¶”ê°€
 		frame.add(newAccount);
 		frame.add(id);
 		frame.add(pw);
@@ -166,6 +159,6 @@ public class newAccount extends JFrame{
 		frame.add(emailadductionT);
 		frame.add(emailokB);
 		//
-		
+
 	}
 }

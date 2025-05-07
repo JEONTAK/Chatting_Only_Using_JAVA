@@ -1,13 +1,13 @@
 package DO;
 
 public class Room {
-	//¹æÀÇ ID
+	//ë°©ì˜ ID
 	private int rID;
-	//¹æ¿¡ ÀÖ´Â À¯Àú ¼ö
+	//ë°©ì— ìˆëŠ” ìœ ì € ìˆ˜
 	private int userCount;
-	//¹æÀ» ¸¸µç »ç¶÷
+	//ë°©ì„ ë§Œë“  ì‚¬ëŒ
 	private String masterName;
-	//¹æ¿¡ ÀÔÀåÇÑ À¯ÀúÀÇ ID ¸ñ·Ï
+	//ë°©ì— ì…ì¥í•œ ìœ ì €ì˜ ID ëª©ë¡
 	public String roomInUserList;
 
 	public Room() {

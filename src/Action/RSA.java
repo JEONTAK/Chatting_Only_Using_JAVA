@@ -1,46 +1,34 @@
 package Action;
 
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
+import javax.crypto.Cipher;
 import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
-import java.util.HashMap;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 
 
 
 public class RSA {
-	static final int KEY_SIZE = 1028;//ºñÆ® 1028·Î °íÁ¤
 	
     /**
-     * ¾ÏÈ£È­
+     * ì•”í˜¸í™”
      */
     public static String encode(String plainData, String stringPublicKey) {
         String encryptedData = null;
         try {
-            //Æò¹®À¸·Î Àü´Ş¹ŞÀº °ø°³Å°¸¦ °ø°³Å°°´Ã¼·Î ¸¸µå´Â °úÁ¤
+            //í‰ë¬¸ìœ¼ë¡œ ì „ë‹¬ë°›ì€ ê³µê°œí‚¤ë¥¼ ê³µê°œí‚¤ ê°ì²´ë¡œ ë§Œë“œëŠ” ê³¼ì •
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            byte[] bytePublicKey = Base64.getDecoder().decode(stringPublicKey.getBytes());//¹®ÀÚ¿­À» ¹ÙÀÌÆ®·Î º¯È¯
-            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(bytePublicKey);//¹ÙÀÌÆ®¸¦ publicKey·Î ÀÎÄÚµù
-            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);//publicKey»ı¼º
+            byte[] bytePublicKey = Base64.getDecoder().decode(stringPublicKey.getBytes());//ë¬¸ìì—´ì„ ë°”ì´íŠ¸ë¡œ ë³€í™˜
+            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(bytePublicKey);//ë°”ì´íŠ¸ë¥¼ ê³µê°œí‚¤ë¡œ ì¸ì½”ë”©
+            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);//ê³µê°œí‚¤ ìƒì„±
 
-            //¸¸µé¾îÁø °ø°³Å°°´Ã¼¸¦ ±â¹İÀ¸·Î ¾ÏÈ£È­¸ğµå·Î ¼³Á¤ÇÏ´Â °úÁ¤
+            //ë§Œë“¤ì–´ì§„ ê³µê°œí‚¤ ê°ì²´ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì•”í˜¸í™” ì„¤ì •
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
-            //Æò¹®À» ¾ÏÈ£È­ÇÏ´Â °úÁ¤
+            //í‰ë¬¸ì„ ì•”í˜¸í™”
             byte[] byteEncryptedData = cipher.doFinal(plainData.getBytes());
             encryptedData = Base64.getEncoder().encodeToString(byteEncryptedData);
         } catch (Exception e) {
@@ -50,22 +38,22 @@ public class RSA {
     }
 
     /**
-     * º¹È£È­
+     * ë³µí˜¸í™”
      */
    public static String decode(String encryptedData, String stringPrivateKey) {
         String decryptedData = null;
         try {
-            //Æò¹®À¸·Î Àü´Ş¹ŞÀº °³ÀÎÅ°¸¦ °³ÀÎÅ°°´Ã¼·Î ¸¸µå´Â °úÁ¤
+            //í‰ë¬¸ìœ¼ë¡œ ì „ë‹¬ë°›ì€ ê°œì¸í‚¤ë¥¼ ê°œì¸í‚¤ ê°ì²´ë¡œ ë§Œë“œëŠ” ê³¼ì •
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            byte[] bytePrivateKey = Base64.getDecoder().decode(stringPrivateKey.getBytes());//¹®ÀÚ¿­À» ¹ÙÀÌÆ®·Î º¯È¯
-            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(bytePrivateKey);//¹ÙÀÌÆ®¸¦ privateKey·Î ÀÎÄÚµù
-            PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);//privateKey »ı¼º
+            byte[] bytePrivateKey = Base64.getDecoder().decode(stringPrivateKey.getBytes());//ë¬¸ìì—´ì„ ë°”ì´íŠ¸ë¡œ ë³€í™˜
+            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(bytePrivateKey);//ë°”ì´íŠ¸ë¥¼ ê°œì¸í‚¤ë¡œ ì¸ì½”ë”©
+            PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);//ê°œì¸í‚¤ ìƒì„±
 
-            //¸¸µé¾îÁø °³ÀÎÅ°°´Ã¼¸¦ ±â¹İÀ¸·Î ¾ÏÈ£È­¸ğµå·Î ¼³Á¤ÇÏ´Â °úÁ¤
+            //ë§Œë“¤ì–´ì§„ ê°œì¸í‚¤ ê°ì²´ë¥¼ ê¸°ë°˜ìœ¼ë¡œ ì•”í˜¸í™” ì„¤ì •
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
-            //¾ÏÈ£¹®À» Æò¹®È­ÇÏ´Â °úÁ¤
+            //ì•”í˜¸ë¬¸ì„ í‰ë¬¸í™” í•¨
             byte[] byteEncryptedData = Base64.getDecoder().decode(encryptedData.getBytes());
             byte[] byteDecryptedData = cipher.doFinal(byteEncryptedData);
             decryptedData = new String(byteDecryptedData);
